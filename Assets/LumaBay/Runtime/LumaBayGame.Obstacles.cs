@@ -7,7 +7,7 @@ namespace LumaBay
     public sealed partial class LumaBayGame
     {
         private int boardPresentationSignature = int.MinValue;
-        private System.Random visualRandom = new System.Random(3187);
+        private readonly System.Random visualRandom = new System.Random(3187);
 
         private void RefreshBoardPresentationIfNeeded()
         {
@@ -107,50 +107,112 @@ namespace LumaBay
 
         private void BuildCrateOverlay(Transform cell, int layers)
         {
-            RectTransform overlay = CreatePanel(cell, "ObstacleOverlay", new Color(0.34f, 0.17f, 0.06f, 0.92f));
-            Stretch(overlay, 3f);
-            overlay.GetComponent<Image>().raycastTarget = false;
+            RectTransform overlay = CreateRect(cell, "ObstacleOverlay");
+            Stretch(overlay, 2f);
+            Image baseImage = overlay.gameObject.AddComponent<Image>();
+            baseImage.sprite = ProceduralArt.Rounded("crate_base", new Color(0.38f, 0.20f, 0.075f, 0.95f), 8);
+            baseImage.type = Image.Type.Sliced;
+            baseImage.raycastTarget = false;
 
-            Image plankA = CreateImage(overlay, "PlankA", ProceduralArt.Rounded("crate_plank_a", new Color(0.70f, 0.38f, 0.12f, 0.96f), 5), Color.white);
-            plankA.rectTransform.anchorMin = new Vector2(0.02f, 0.43f);
-            plankA.rectTransform.anchorMax = new Vector2(0.98f, 0.58f);
-            plankA.rectTransform.offsetMin = Vector2.zero;
-            plankA.rectTransform.offsetMax = Vector2.zero;
-            plankA.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 33f);
-            plankA.raycastTarget = false;
+            AddCratePlank(overlay, "Top", new Vector2(0.06f, 0.75f), new Vector2(0.94f, 0.91f), 0f,
+                new Color(0.72f, 0.42f, 0.16f, 0.98f));
+            AddCratePlank(overlay, "Bottom", new Vector2(0.06f, 0.09f), new Vector2(0.94f, 0.25f), 0f,
+                new Color(0.63f, 0.34f, 0.12f, 0.98f));
+            AddCratePlank(overlay, "CrossA", new Vector2(0.02f, 0.42f), new Vector2(0.98f, 0.57f), 34f,
+                new Color(0.78f, 0.46f, 0.18f, 0.97f));
+            AddCratePlank(overlay, "CrossB", new Vector2(0.02f, 0.42f), new Vector2(0.98f, 0.57f), -34f,
+                new Color(0.69f, 0.38f, 0.14f, 0.97f));
 
-            Image plankB = CreateImage(overlay, "PlankB", ProceduralArt.Rounded("crate_plank_b", new Color(0.72f, 0.40f, 0.13f, 0.96f), 5), Color.white);
-            plankB.rectTransform.anchorMin = new Vector2(0.02f, 0.43f);
-            plankB.rectTransform.anchorMax = new Vector2(0.98f, 0.58f);
-            plankB.rectTransform.offsetMin = Vector2.zero;
-            plankB.rectTransform.offsetMax = Vector2.zero;
-            plankB.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -33f);
-            plankB.raycastTarget = false;
+            for (int i = 0; i < 4; i++)
+            {
+                float x = i < 2 ? 0.13f : 0.87f;
+                float y = i % 2 == 0 ? 0.18f : 0.82f;
+                Image nail = CreateImage(overlay, $"Nail{i}", ProceduralArt.Pearl("crate_nail"),
+                    new Color(0.35f, 0.30f, 0.24f, 0.95f));
+                nail.rectTransform.anchorMin = new Vector2(x - 0.045f, y - 0.045f);
+                nail.rectTransform.anchorMax = new Vector2(x + 0.045f, y + 0.045f);
+                nail.rectTransform.offsetMin = Vector2.zero;
+                nail.rectTransform.offsetMax = Vector2.zero;
+                nail.raycastTarget = false;
+            }
 
             if (layers > 1)
             {
-                Text layerText = CreateText(overlay, layers.ToString(), 22, TextAnchor.UpperRight, NauticalTheme.Pearl, FontStyle.Bold);
-                Stretch(layerText.rectTransform, 7f);
+                RectTransform badge = CreateRect(overlay, "LayerBadge");
+                badge.anchorMin = new Vector2(0.66f, 0.64f);
+                badge.anchorMax = new Vector2(0.96f, 0.94f);
+                badge.offsetMin = Vector2.zero;
+                badge.offsetMax = Vector2.zero;
+                Image badgeImage = badge.gameObject.AddComponent<Image>();
+                badgeImage.sprite = ProceduralArt.Pearl("crate_layer_badge");
+                badgeImage.color = new Color(0.12f, 0.08f, 0.04f, 0.88f);
+                badgeImage.raycastTarget = false;
+                Text layerText = CreateText(badge, layers.ToString(), 20, TextAnchor.MiddleCenter,
+                    Color.white, FontStyle.Bold);
+                Stretch(layerText.rectTransform, 2f);
                 layerText.raycastTarget = false;
             }
         }
 
+        private void AddCratePlank(RectTransform parent, string name, Vector2 anchorMin, Vector2 anchorMax,
+            float rotation, Color color)
+        {
+            Image plank = CreateImage(parent, name,
+                ProceduralArt.Rounded($"crate_{name}", color, 5), Color.white);
+            plank.rectTransform.anchorMin = anchorMin;
+            plank.rectTransform.anchorMax = anchorMax;
+            plank.rectTransform.offsetMin = Vector2.zero;
+            plank.rectTransform.offsetMax = Vector2.zero;
+            plank.rectTransform.localRotation = Quaternion.Euler(0f, 0f, rotation);
+            plank.raycastTarget = false;
+        }
+
         private void BuildIceOverlay(Transform cell, int layers)
         {
-            RectTransform overlay = CreatePanel(cell, "ObstacleOverlay", new Color(0.43f, 0.79f, 0.98f, 0.34f));
+            RectTransform overlay = CreateRect(cell, "ObstacleOverlay");
             Stretch(overlay, 2f);
-            Image image = overlay.GetComponent<Image>();
-            image.raycastTarget = false;
-
-            Text ice = CreateText(overlay, "❄", 38, TextAnchor.MiddleCenter, new Color(0.88f, 0.98f, 1f, 0.86f), FontStyle.Bold);
-            Stretch(ice.rectTransform, 4f);
+            Image ice = overlay.gameObject.AddComponent<Image>();
+            ice.sprite = ProceduralArt.Rounded("ice_glass", new Color(0.55f, 0.84f, 0.98f, 0.34f), 10);
+            ice.type = Image.Type.Sliced;
             ice.raycastTarget = false;
+
+            AddIceCrack(overlay, new Vector2(0.18f, 0.84f), new Vector2(0.52f, 0.48f), 2.5f);
+            AddIceCrack(overlay, new Vector2(0.52f, 0.48f), new Vector2(0.84f, 0.68f), 2f);
+            AddIceCrack(overlay, new Vector2(0.52f, 0.48f), new Vector2(0.68f, 0.14f), 2.5f);
+            AddIceCrack(overlay, new Vector2(0.52f, 0.48f), new Vector2(0.18f, 0.25f), 1.8f);
+
+            Image shine = CreateImage(overlay, "IceShine", ProceduralArt.Rounded("ice_shine",
+                new Color(1f, 1f, 1f, 0.22f), 6), Color.white);
+            shine.rectTransform.anchorMin = new Vector2(0.10f, 0.70f);
+            shine.rectTransform.anchorMax = new Vector2(0.42f, 0.80f);
+            shine.rectTransform.offsetMin = Vector2.zero;
+            shine.rectTransform.offsetMax = Vector2.zero;
+            shine.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -18f);
+            shine.raycastTarget = false;
+
             if (layers > 1)
             {
-                Outline outline = ice.gameObject.AddComponent<Outline>();
-                outline.effectColor = new Color(0.15f, 0.45f, 0.75f, 0.90f);
-                outline.effectDistance = new Vector2(2f, -2f);
+                Text layerText = CreateText(overlay, layers.ToString(), 19, TextAnchor.UpperRight,
+                    Color.white, FontStyle.Bold);
+                Stretch(layerText.rectTransform, 6f);
+                layerText.raycastTarget = false;
             }
+        }
+
+        private void AddIceCrack(RectTransform parent, Vector2 from, Vector2 to, float width)
+        {
+            Vector2 delta = to - from;
+            float length = delta.magnitude;
+            Image crack = CreateImage(parent, "IceCrack", ProceduralArt.Rounded("ice_crack",
+                new Color(0.82f, 0.97f, 1f, 0.80f), 2), Color.white);
+            crack.rectTransform.anchorMin = from;
+            crack.rectTransform.anchorMax = from;
+            crack.rectTransform.pivot = new Vector2(0f, 0.5f);
+            crack.rectTransform.anchoredPosition = Vector2.zero;
+            crack.rectTransform.sizeDelta = new Vector2(length * 80f, width);
+            crack.rectTransform.localRotation = Quaternion.Euler(0f, 0f,
+                Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+            crack.raycastTarget = false;
         }
 
         private void BuildNetOverlay(Transform cell)
@@ -168,7 +230,8 @@ namespace LumaBay
                 AddNetRope(overlay, offset, -28f);
             }
 
-            Image knot = CreateImage(overlay, "Knot", ProceduralArt.Pearl("net_knot"), new Color(0.82f, 0.70f, 0.43f, 0.92f));
+            Image knot = CreateImage(overlay, "Knot", ProceduralArt.Pearl("net_knot"),
+                new Color(0.82f, 0.70f, 0.43f, 0.92f));
             knot.rectTransform.anchorMin = new Vector2(0.40f, 0.40f);
             knot.rectTransform.anchorMax = new Vector2(0.60f, 0.60f);
             knot.rectTransform.offsetMin = Vector2.zero;
@@ -178,7 +241,8 @@ namespace LumaBay
 
         private void AddNetRope(RectTransform parent, float verticalOffset, float angle)
         {
-            Image rope = CreateImage(parent, "NetRope", ProceduralArt.Rounded("net_rope", new Color(0.78f, 0.66f, 0.42f, 0.78f), 3), Color.white);
+            Image rope = CreateImage(parent, "NetRope", ProceduralArt.Rounded("net_rope",
+                new Color(0.78f, 0.66f, 0.42f, 0.74f), 3), Color.white);
             rope.rectTransform.anchorMin = new Vector2(-0.10f, 0.48f + verticalOffset);
             rope.rectTransform.anchorMax = new Vector2(1.10f, 0.52f + verticalOffset);
             rope.rectTransform.offsetMin = Vector2.zero;
