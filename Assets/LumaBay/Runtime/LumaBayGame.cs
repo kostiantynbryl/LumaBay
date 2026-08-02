@@ -47,6 +47,7 @@ namespace LumaBay
             RefreshGoalPresentationIfNeeded();
             RefreshBoardPresentationIfNeeded();
             RefreshArtOverridesIfNeeded();
+            UpdateHintAnimation();
         }
 
         private void OnApplicationPause(bool pause)
@@ -62,6 +63,7 @@ namespace LumaBay
         public void OnPieceSwipe(int x, int y, Vector2Int direction)
         {
             if (boardBusy || levelFinished || board == null) return;
+            NotifyPlayerInteraction();
             selectedCell = null;
             BeginAnimatedMove(new Vector2Int(x, y), new Vector2Int(x + direction.x, y + direction.y));
         }
@@ -69,6 +71,7 @@ namespace LumaBay
         public void OnPieceTapped(int x, int y)
         {
             if (boardBusy || levelFinished || board == null) return;
+            NotifyPlayerInteraction();
             Vector2Int tapped = new Vector2Int(x, y);
             if (!selectedCell.HasValue)
             {
