@@ -7,19 +7,20 @@ namespace LumaBay
     public static class PanelShadowLayoutGuard
     {
         private static readonly HashSet<int> Processed = new HashSet<int>();
-        private static int lastFrame = -1;
+        private static int lastFrame = -10;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()
         {
             Processed.Clear();
+            lastFrame = -10;
             Canvas.willRenderCanvases -= Apply;
             Canvas.willRenderCanvases += Apply;
         }
 
         private static void Apply()
         {
-            if (lastFrame == Time.frameCount) return;
+            if (Time.frameCount - lastFrame < 5) return;
             lastFrame = Time.frameCount;
 
             RectTransform[] rects = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
