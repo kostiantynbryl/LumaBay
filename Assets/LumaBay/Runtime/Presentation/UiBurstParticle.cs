@@ -9,6 +9,13 @@ namespace LumaBay
         private RectTransform rect;
         private Image image;
 
+        private void Awake()
+        {
+            LayoutElement layout = GetComponent<LayoutElement>();
+            if (layout == null) layout = gameObject.AddComponent<LayoutElement>();
+            layout.ignoreLayout = true;
+        }
+
         public void Launch(Vector2 velocity, float duration, float rotationSpeed)
         {
             rect = transform as RectTransform;
