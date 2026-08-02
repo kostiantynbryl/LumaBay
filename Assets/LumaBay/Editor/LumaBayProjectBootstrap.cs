@@ -24,6 +24,7 @@ namespace LumaBay.Editor
             Directory.CreateDirectory("Assets/LumaBay/Scenes");
             EnsureScene();
             ConfigurePlayer();
+            LumaBayBrandingGenerator.EnsureBranding();
             ConfigureBuildSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
