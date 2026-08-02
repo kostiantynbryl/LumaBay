@@ -38,8 +38,23 @@ namespace LumaBay
         public PieceKind Piece = PieceKind.None;
         public SpecialKind Special = SpecialKind.None;
         public ObstacleKind Obstacle = ObstacleKind.None;
-        public int ObstacleLayers;
+        [SerializeField] private int obstacleLayers;
         public int FogLayers;
+
+        public int ObstacleLayers
+        {
+            get => obstacleLayers;
+            set
+            {
+                bool crateAbsorbedHit = Obstacle == ObstacleKind.Crate && obstacleLayers > 0 && value < obstacleLayers;
+                obstacleLayers = Mathf.Max(0, value);
+                if (crateAbsorbedHit)
+                {
+                    Piece = PieceKind.None;
+                    Special = SpecialKind.None;
+                }
+            }
+        }
 
         public bool IsEmpty => Piece == PieceKind.None;
         public bool SwapLocked => Obstacle == ObstacleKind.Net && ObstacleLayers > 0;
