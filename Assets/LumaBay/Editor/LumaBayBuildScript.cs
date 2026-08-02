@@ -8,7 +8,7 @@ namespace LumaBay.Editor
 {
     public static class LumaBayBuildScript
     {
-        private const string OutputPath = "Builds/Android/LumaBay-0.1.1-alpha.apk";
+        private const string OutputPath = "Builds/Android/LumaBay-0.1.2-alpha.apk";
 
         [MenuItem("Luma Bay/Build Android Alpha", priority = 20)]
         public static void BuildAndroid()
@@ -24,12 +24,12 @@ namespace LumaBay.Editor
                 scenes = new[] { LumaBayProjectBootstrap.ScenePath },
                 locationPathName = OutputPath,
                 target = BuildTarget.Android,
-                options = BuildOptions.None
+                options = BuildOptions.CleanBuildCache
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
             BuildSummary summary = report.summary;
-            Debug.Log($"Luma Bay build result: {summary.result}; size: {summary.totalSize} bytes; errors: {summary.totalErrors}");
+            Debug.Log($"Luma Bay 0.1.2 build result: {summary.result}; size: {summary.totalSize} bytes; errors: {summary.totalErrors}");
 
             if (summary.result != BuildResult.Succeeded)
             {
