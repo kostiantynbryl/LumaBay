@@ -25,86 +25,118 @@ namespace LumaBay
         {
             ClearScreen();
 
-            RectTransform header = CreatePanel(screenRoot, "GameHeader", NauticalTheme.Glass);
-            header.anchorMin = new Vector2(0.018f, 0.916f);
+            RectTransform header = CreatePanel(screenRoot, "GameHeader", new Color(0.025f, 0.12f, 0.21f, 0.97f));
+            header.anchorMin = new Vector2(0.018f, 0.925f);
             header.anchorMax = new Vector2(0.982f, 0.994f);
             header.offsetMin = Vector2.zero;
             header.offsetMax = Vector2.zero;
             HorizontalLayoutGroup headerLayout = header.gameObject.AddComponent<HorizontalLayoutGroup>();
-            headerLayout.padding = new RectOffset(12, 12, 7, 7);
+            headerLayout.padding = new RectOffset(9, 12, 6, 6);
             headerLayout.spacing = 8f;
             headerLayout.childAlignment = TextAnchor.MiddleCenter;
             headerLayout.childForceExpandWidth = false;
             headerLayout.childForceExpandHeight = true;
 
-            Button back = CreateButton(header, "‹", ShowConfirmExitLevel, NauticalTheme.Navy, NauticalTheme.Pearl, 38);
-            SetLayout(back.GetComponent<RectTransform>(), -1f, 64f);
-            Text levelTitle = CreateText(header, Localization.T("level", currentLevel.Id), 29, TextAnchor.MiddleLeft, NauticalTheme.Pearl, FontStyle.Bold);
+            Button back = CreateButton(header, "‹", ShowConfirmExitLevel,
+                new Color(0.04f, 0.18f, 0.30f), Color.white, 37);
+            SetLayout(back.GetComponent<RectTransform>(), -1f, 60f);
+
+            Text levelTitle = CreateText(header, Localization.T("level", currentLevel.Id), 28,
+                TextAnchor.MiddleLeft, Color.white, FontStyle.Bold);
             SetLayout(levelTitle.rectTransform, -1f, 1f);
 
-            RectTransform movesMedallion = CreatePanel(header, "MovesMedallion", NauticalTheme.GlassSoft);
-            SetLayout(movesMedallion, -1f, 120f);
-            movesLabel = CreateText(movesMedallion, string.Empty, 24, TextAnchor.MiddleCenter, NauticalTheme.Pearl, FontStyle.Bold);
-            Stretch(movesLabel.rectTransform, 6f);
+            RectTransform movesChip = CreateRect(header, "MovesChip");
+            Image movesBackground = movesChip.gameObject.AddComponent<Image>();
+            movesBackground.sprite = LumaBayArtPack.GoalChip ?? ProceduralArt.Rounded("moves_chip", new Color(0.07f, 0.33f, 0.48f), 18);
+            movesBackground.type = Image.Type.Sliced;
+            SetLayout(movesChip, -1f, 128f);
+            movesLabel = CreateText(movesChip, string.Empty, 22, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
+            Stretch(movesLabel.rectTransform, 5f);
 
-            walletLabel = CreateText(header, $"◆ {save.Coins}", 25, TextAnchor.MiddleRight, NauticalTheme.GoldLight, FontStyle.Bold);
-            SetLayout(walletLabel.rectTransform, -1f, 132f);
+            walletLabel = CreateText(header, $"◆ {save.Coins}", 23,
+                TextAnchor.MiddleRight, NauticalTheme.GoldLight, FontStyle.Bold);
+            SetLayout(walletLabel.rectTransform, -1f, 112f);
 
-            RectTransform goals = CreatePanel(screenRoot, "Goals", NauticalTheme.Glass);
-            goals.anchorMin = new Vector2(0.026f, 0.818f);
-            goals.anchorMax = new Vector2(0.974f, 0.906f);
+            RectTransform goals = CreateRect(screenRoot, "Goals");
+            Image goalsBackground = goals.gameObject.AddComponent<Image>();
+            goalsBackground.sprite = LumaBayArtPack.GoalChip ?? ProceduralArt.Rounded("goal_bar", new Color(0.03f, 0.17f, 0.28f), 20);
+            goalsBackground.type = Image.Type.Sliced;
+            goals.anchorMin = new Vector2(0.026f, 0.835f);
+            goals.anchorMax = new Vector2(0.974f, 0.915f);
             goals.offsetMin = Vector2.zero;
             goals.offsetMax = Vector2.zero;
             HorizontalLayoutGroup goalsLayout = goals.gameObject.AddComponent<HorizontalLayoutGroup>();
-            goalsLayout.padding = new RectOffset(17, 17, 8, 8);
+            goalsLayout.padding = new RectOffset(15, 15, 7, 7);
             goalsLayout.spacing = 8f;
             goalsLayout.childAlignment = TextAnchor.MiddleCenter;
             goalsLayout.childForceExpandWidth = true;
             goalsLayout.childForceExpandHeight = true;
 
-            collectGoalLabel = CreateText(goals, string.Empty, 20, TextAnchor.MiddleCenter, NauticalTheme.Pearl, FontStyle.Bold);
-            fogGoalLabel = CreateText(goals, string.Empty, 19, TextAnchor.MiddleCenter, new Color(0.74f, 0.93f, 1f), FontStyle.Bold);
+            collectGoalLabel = CreateText(goals, string.Empty, 19, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
+            collectGoalLabel.resizeTextForBestFit = true;
+            collectGoalLabel.resizeTextMinSize = 14;
+            collectGoalLabel.resizeTextMaxSize = 19;
+            fogGoalLabel = CreateText(goals, string.Empty, 18, TextAnchor.MiddleCenter,
+                new Color(0.72f, 0.93f, 1f), FontStyle.Bold);
+            fogGoalLabel.resizeTextForBestFit = true;
+            fogGoalLabel.resizeTextMinSize = 13;
+            fogGoalLabel.resizeTextMaxSize = 18;
             fogGoalLabel.gameObject.SetActive(currentLevel.FogCount > 0);
 
             RectTransform boardZone = CreateRect(screenRoot, "BoardZone");
-            boardZone.anchorMin = new Vector2(0f, 0.235f);
-            boardZone.anchorMax = new Vector2(1f, 0.812f);
+            boardZone.anchorMin = new Vector2(0f, 0.245f);
+            boardZone.anchorMax = new Vector2(1f, 0.825f);
             boardZone.offsetMin = Vector2.zero;
             boardZone.offsetMax = Vector2.zero;
 
-            boardGrid = CreatePanel(boardZone, "Board", NauticalTheme.Midnight);
-            boardGrid.anchorMin = new Vector2(0.5f, 0.5f);
-            boardGrid.anchorMax = new Vector2(0.5f, 0.5f);
-            boardGrid.pivot = new Vector2(0.5f, 0.5f);
-            boardGrid.sizeDelta = new Vector2(694f, 694f);
-            RectMask2D boardMask = boardGrid.gameObject.AddComponent<RectMask2D>();
-            boardMask.padding = Vector4.zero;
+            RectTransform boardFrame = CreatePanel(boardZone, "BoardFrame", new Color(0.02f, 0.09f, 0.16f, 0.98f));
+            boardFrame.anchorMin = new Vector2(0.5f, 0.5f);
+            boardFrame.anchorMax = new Vector2(0.5f, 0.5f);
+            boardFrame.pivot = new Vector2(0.5f, 0.5f);
+            boardFrame.sizeDelta = new Vector2(706f, 706f);
+
+            boardGrid = CreateRect(boardFrame, "Board");
+            Stretch(boardGrid, 10f);
+            Image boardBackground = boardGrid.gameObject.AddComponent<Image>();
+            boardBackground.sprite = ProceduralArt.Rounded("board_inner", new Color(0.018f, 0.075f, 0.125f, 1f), 13);
+            boardBackground.type = Image.Type.Sliced;
+            RectMask2D mask = boardGrid.gameObject.AddComponent<RectMask2D>();
+            mask.padding = Vector4.zero;
 
             GridLayoutGroup grid = boardGrid.gameObject.AddComponent<GridLayoutGroup>();
-            grid.padding = new RectOffset(13, 13, 13, 13);
-            grid.spacing = new Vector2(4f, 4f);
-            grid.cellSize = new Vector2(80.5f, 80.5f);
+            const int padding = 8;
+            const float spacing = 4f;
+            float available = 686f - padding * 2f - spacing * (currentLevel.Width - 1);
+            float cellSize = available / currentLevel.Width;
+            grid.padding = new RectOffset(padding, padding, padding, padding);
+            grid.spacing = new Vector2(spacing, spacing);
+            grid.cellSize = new Vector2(cellSize, cellSize);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = currentLevel.Width;
             grid.childAlignment = TextAnchor.MiddleCenter;
 
-            RectTransform footer = CreatePanel(screenRoot, "BoosterTray", NauticalTheme.Glass);
+            RectTransform footer = CreatePanel(screenRoot, "BoosterTray", new Color(0.02f, 0.10f, 0.18f, 0.96f));
             footer.anchorMin = new Vector2(0.015f, 0.012f);
-            footer.anchorMax = new Vector2(0.985f, 0.222f);
+            footer.anchorMax = new Vector2(0.985f, 0.225f);
             footer.offsetMin = Vector2.zero;
             footer.offsetMax = Vector2.zero;
             HorizontalLayoutGroup footerLayout = footer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            footerLayout.padding = new RectOffset(11, 11, 13, 13);
-            footerLayout.spacing = 7f;
+            footerLayout.padding = new RectOffset(9, 9, 10, 10);
+            footerLayout.spacing = 6f;
             footerLayout.childAlignment = TextAnchor.MiddleCenter;
             footerLayout.childForceExpandWidth = true;
             footerLayout.childForceExpandHeight = true;
 
-            CreateBoosterCard(footer, "ϟ", Localization.T("booster_lightning"), 200, UseLightningBolt, new Color(0.20f, 0.50f, 1f));
-            CreateBoosterCard(footer, "⚓", Localization.T("booster_anchor"), 300, UseAnchorBomb, NauticalTheme.Purple);
-            CreateBoosterCard(footer, "↻", Localization.T("booster_shuffle"), 50, BuyShuffle, NauticalTheme.OceanBright);
-            CreateBoosterCard(footer, "+5", Localization.T("booster_time"), 100, BuyExtraMoves, new Color(0.20f, 0.68f, 0.35f));
-            CreateBoosterCard(footer, "✦", Localization.T("booster_harpoon"), 250, UseMagicHarpoon, new Color(0.82f, 0.18f, 0.18f));
+            CreateBoosterCard(footer, string.Empty, Localization.T("booster_lightning"), 200,
+                UseLightningBolt, new Color(0.20f, 0.58f, 1f));
+            CreateBoosterCard(footer, string.Empty, Localization.T("booster_anchor"), 300,
+                UseAnchorBomb, new Color(0.55f, 0.31f, 0.92f));
+            CreateBoosterCard(footer, string.Empty, Localization.T("booster_shuffle"), 50,
+                BuyShuffle, new Color(0.10f, 0.70f, 0.72f));
+            CreateBoosterCard(footer, string.Empty, Localization.T("booster_time"), 100,
+                BuyExtraMoves, new Color(0.27f, 0.74f, 0.38f));
+            CreateBoosterCard(footer, string.Empty, Localization.T("booster_harpoon"), 250,
+                UseMagicHarpoon, new Color(0.92f, 0.28f, 0.20f));
 
             RefreshBoard();
             UpdateGameplayLabels();
@@ -132,34 +164,13 @@ namespace LumaBay
 
         private void AttemptMove(Vector2Int a, Vector2Int b)
         {
-            if (!board.IsInside(b.x, b.y))
-            {
-                audioSynth.PlayError();
-                return;
-            }
-
-            boardBusy = true;
-            if (!board.TrySwap(a, b, out MoveResult result))
-            {
-                boardBusy = false;
-                audioSynth.PlayError();
-                ShowToast(Localization.T("invalid_move"));
-                RefreshBoard();
-                return;
-            }
-
-            movesRemaining--;
-            ApplyMoveResult(result);
-            audioSynth.PlayMatch();
-            StartCoroutine(FinishMove(result));
+            BeginAnimatedMove(a, b);
         }
 
         private void ApplyMoveResult(MoveResult result)
         {
             if (result.Collected.TryGetValue(currentLevel.TargetPiece, out int collected))
-            {
                 collectedTarget += collected;
-            }
             clearedFog += result.ClearedFog;
         }
 
@@ -168,17 +179,11 @@ namespace LumaBay
             RefreshBoard();
             UpdateGameplayLabels();
             if (result.Cascades > 1) ShowToast(Localization.T("cascade", result.Cascades));
-            yield return new WaitForSecondsRealtime(0.28f);
+            yield return new WaitForSecondsRealtime(0.34f);
             boardBusy = false;
 
-            if (IsGoalComplete())
-            {
-                CompleteLevel();
-            }
-            else if (movesRemaining <= 0)
-            {
-                FailLevel();
-            }
+            if (IsGoalComplete()) CompleteLevel();
+            else if (movesRemaining <= 0) FailLevel();
         }
 
         private bool IsGoalComplete()
@@ -190,6 +195,7 @@ namespace LumaBay
         {
             if (levelFinished) return;
             levelFinished = true;
+
             int stars = CalculateStars();
             int oldStars = save.StarsByLevel[currentLevel.Id - 1];
             int newStars = Mathf.Max(oldStars, stars);
@@ -197,18 +203,21 @@ namespace LumaBay
             save.StarsByLevel[currentLevel.Id - 1] = newStars;
             save.TotalStars += delta;
             save.AvailableStars += delta;
+
             int reward = 40 + stars * 20 + Mathf.Max(0, movesRemaining) * 2;
             save.Coins += reward;
             if (currentLevel.Id < LevelCatalog.Count)
-            {
                 save.UnlockedLevel = Mathf.Max(save.UnlockedLevel, currentLevel.Id + 1);
-            }
             SaveService.Save(save);
+
             audioSynth.PlayWin();
             if (save.VibrationEnabled) Handheld.Vibrate();
 
             string starLine = new string('★', stars) + new string('☆', 3 - stars);
-            string body = $"<size=54><color=#FFD56A>{starLine}</color></size>\n\n{Localization.T("win_subtitle")}\n<size=34><color=#FFD56A>+{reward} ◆</color></size>";
+            string taskHint = GetUnlockedTaskHint();
+            string body = $"<size=55><color=#FFD56A>{starLine}</color></size>\n" +
+                          $"<size=26>{Localization.T("win_subtitle")}</size>\n" +
+                          $"<size=34><color=#FFD56A>+{reward} ◆</color></size>{taskHint}";
             Action primary = currentLevel.Id < LevelCatalog.Count
                 ? (Action)(() => StartLevel(currentLevel.Id + 1))
                 : ShowMap;
@@ -217,12 +226,25 @@ namespace LumaBay
                 primary, Localization.T("map"), ShowMap);
         }
 
+        private string GetUnlockedTaskHint()
+        {
+            if (save.LighthouseComplete) return string.Empty;
+            LighthouseTask task = LighthouseTaskCatalog.Get(save.LighthouseTaskIndex);
+            if (task == null || save.UnlockedLevel < task.UnlockLevel) return string.Empty;
+            return Localization.Language == "en"
+                ? "\n<size=18><color=#8EDDEB>New lighthouse task available</color></size>"
+                : "\n<size=18><color=#8EDDEB>Доступно новое задание маяка</color></size>";
+        }
+
         private void FailLevel()
         {
             if (levelFinished) return;
             levelFinished = true;
-            audioSynth.PlayError();
-            ShowModal(Localization.T("lose"), Localization.T("level", currentLevel.Id),
+            audioSynth.PlayLose();
+            ShowModal(Localization.T("lose"),
+                Localization.Language == "en"
+                    ? "The lighthouse still needs your help. Try a new approach or use a booster."
+                    : "Маяку всё ещё нужна помощь. Попробуйте другой ход или используйте усилитель.",
                 Localization.T("retry"), () => StartLevel(currentLevel.Id), Localization.T("map"), ShowMap);
         }
 
@@ -252,7 +274,7 @@ namespace LumaBay
         {
             if (!TrySpendCoins(200)) return;
             selectedCell = board.PlaceSpecial(SpecialKind.ClearRow, selectedCell);
-            audioSynth.PlayMatch();
+            audioSynth.PlayBooster();
             RefreshBoard();
             UpdateGameplayLabels();
             ShowToast(Localization.T("booster_lightning"));
@@ -262,7 +284,7 @@ namespace LumaBay
         {
             if (!TrySpendCoins(300)) return;
             selectedCell = board.PlaceSpecial(SpecialKind.Bomb, selectedCell);
-            audioSynth.PlayMatch();
+            audioSynth.PlayBooster();
             RefreshBoard();
             UpdateGameplayLabels();
             ShowToast(Localization.T("booster_anchor"));
@@ -273,7 +295,7 @@ namespace LumaBay
             if (!TrySpendCoins(50)) return;
             board.Shuffle();
             selectedCell = null;
-            audioSynth.PlayClick();
+            audioSynth.PlayBooster();
             RefreshBoard();
             UpdateGameplayLabels();
             ShowToast(Localization.T("booster_shuffle"));
@@ -281,19 +303,18 @@ namespace LumaBay
 
         private void BuyExtraMoves()
         {
-            if (boardBusy || levelFinished) return;
-            if (!TrySpendCoins(100)) return;
+            if (boardBusy || levelFinished || !TrySpendCoins(100)) return;
             movesRemaining += 5;
-            audioSynth.PlayClick();
+            audioSynth.PlayBooster();
             UpdateGameplayLabels();
-            ShowToast(Localization.T("booster_time"));
+            ShowToast("+5");
         }
 
         private void UseMagicHarpoon()
         {
             if (!TrySpendCoins(250)) return;
             selectedCell = board.PlaceSpecial(SpecialKind.Rainbow, selectedCell);
-            audioSynth.PlayWin();
+            audioSynth.PlayBooster();
             RefreshBoard();
             UpdateGameplayLabels();
             ShowToast(Localization.T("booster_harpoon"));
@@ -312,52 +333,77 @@ namespace LumaBay
                     BoardCell cell = board.GetCell(x, y);
                     bool selected = selectedCell.HasValue && selectedCell.Value.x == x && selectedCell.Value.y == y;
 
-                    Color cellColor = selected
-                        ? Color.Lerp(NauticalTheme.Gold, NauticalTheme.Navy, 0.36f)
-                        : NauticalTheme.PieceCell(x, y);
-                    RectTransform cellRoot = CreatePanel(boardGrid, $"Cell_{x}_{y}", cellColor);
+                    RectTransform cellRoot = CreateRect(boardGrid, $"Cell_{x}_{y}");
+                    Image cellImage = cellRoot.gameObject.AddComponent<Image>();
+                    Color fill = ((x + y) & 1) == 0
+                        ? new Color(0.055f, 0.16f, 0.27f, 0.98f)
+                        : new Color(0.075f, 0.20f, 0.32f, 0.98f);
+                    if (selected) fill = Color.Lerp(fill, new Color(0.95f, 0.69f, 0.24f), 0.42f);
+                    cellImage.sprite = ProceduralArt.Rounded($"cell_{(x + y) & 1}_{selected}", fill, 11);
+                    cellImage.type = Image.Type.Sliced;
+
                     PieceView view = cellRoot.gameObject.AddComponent<PieceView>();
                     view.Configure(this, x, y);
 
-                    Image pieceGlow = CreateImage(cellRoot, "PieceGlow", ProceduralArt.Pearl($"piece_glow_{x}_{y}"),
-                        selected ? new Color(1f, 0.78f, 0.25f, 0.22f) : new Color(0.30f, 0.75f, 1f, 0.08f));
-                    Stretch(pieceGlow.rectTransform, 5f);
-                    pieceGlow.raycastTarget = false;
-                    if (selected) pieceGlow.gameObject.AddComponent<SoftGlowPulse>();
+                    if (selected)
+                    {
+                        Image selection = CreateImage(cellRoot, "SelectionGlow", ProceduralArt.Pearl("selection_glow"),
+                            new Color(1f, 0.77f, 0.24f, 0.24f));
+                        Stretch(selection.rectTransform, 4f);
+                        selection.raycastTarget = false;
+                        selection.gameObject.AddComponent<SoftGlowPulse>();
+                    }
 
-                    Image piece = CreateImage(cellRoot, "Piece", ProceduralArt.Piece(cell.Piece), Color.white);
-                    Stretch(piece.rectTransform, 5f);
+                    Image piece = CreateImage(cellRoot, "Piece",
+                        LumaBayArtPack.Piece(cell.Piece) ?? ProceduralArt.Piece(cell.Piece), Color.white);
+                    Stretch(piece.rectTransform, 3f);
                     piece.raycastTarget = false;
 
-                    if (cell.Special != SpecialKind.None)
-                    {
-                        string specialText = cell.Special switch
-                        {
-                            SpecialKind.ClearRow => "↔",
-                            SpecialKind.ClearColumn => "↕",
-                            SpecialKind.Bomb => "⚓",
-                            SpecialKind.Rainbow => "✦",
-                            _ => string.Empty
-                        };
-                        Text badge = CreateText(cellRoot, specialText, 31, TextAnchor.MiddleCenter, NauticalTheme.GoldLight, FontStyle.Bold);
-                        badge.raycastTarget = false;
-                        Stretch(badge.rectTransform, 7f);
-                        Outline outline = badge.gameObject.AddComponent<Outline>();
-                        outline.effectColor = new Color(0.12f, 0.03f, 0f, 0.92f);
-                        outline.effectDistance = new Vector2(1.5f, -1.5f);
-                    }
-
-                    if (cell.FogLayers > 0)
-                    {
-                        Image fog = CreateImage(cellRoot, "Fog", ProceduralArt.OrnateFrame("fog", new Color(0.57f, 0.76f, 0.86f, 0.55f), true), Color.white);
-                        Stretch(fog.rectTransform, 3f);
-                        fog.raycastTarget = false;
-                        Text fogText = CreateText(fog.transform, "≈", 34, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
-                        Stretch(fogText.rectTransform);
-                        fogText.raycastTarget = false;
-                    }
+                    CreateSpecialPresentation(cellRoot, cell.Special);
+                    if (cell.FogLayers > 0) CreateFogPresentation(cellRoot, cell.FogLayers);
                 }
             }
+        }
+
+        private void CreateSpecialPresentation(RectTransform cellRoot, SpecialKind special)
+        {
+            if (special == SpecialKind.None) return;
+
+            if (special == SpecialKind.Bomb || special == SpecialKind.Rainbow)
+            {
+                Sprite icon = special == SpecialKind.Bomb
+                    ? LumaBayArtPack.Booster("anchor")
+                    : LumaBayArtPack.Booster("harpoon");
+                Image image = CreateImage(cellRoot, "SpecialIcon", icon, new Color(1f, 1f, 1f, 0.92f));
+                image.rectTransform.anchorMin = new Vector2(0.17f, 0.17f);
+                image.rectTransform.anchorMax = new Vector2(0.83f, 0.83f);
+                image.rectTransform.offsetMin = Vector2.zero;
+                image.rectTransform.offsetMax = Vector2.zero;
+                image.raycastTarget = false;
+                image.gameObject.AddComponent<SoftGlowPulse>();
+                return;
+            }
+
+            string arrow = special == SpecialKind.ClearRow ? "↔" : "↕";
+            Text badge = CreateText(cellRoot, arrow, 30, TextAnchor.MiddleCenter,
+                NauticalTheme.GoldLight, FontStyle.Bold);
+            Stretch(badge.rectTransform, 6f);
+            badge.raycastTarget = false;
+            Outline outline = badge.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0.04f, 0.08f, 0.12f, 0.95f);
+            outline.effectDistance = new Vector2(2f, -2f);
+        }
+
+        private void CreateFogPresentation(RectTransform cellRoot, int layers)
+        {
+            Image fog = CreateImage(cellRoot, "Fog",
+                ProceduralArt.Rounded("fog_clean", new Color(0.64f, 0.84f, 0.92f, 0.47f), 10), Color.white);
+            Stretch(fog.rectTransform, 2f);
+            fog.raycastTarget = false;
+            Text fogText = CreateText(fog.transform, layers > 1 ? $"≈ {layers}" : "≈", 29,
+                TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
+            Stretch(fogText.rectTransform);
+            fogText.raycastTarget = false;
         }
 
         private void UpdateGameplayLabels()
@@ -370,15 +416,17 @@ namespace LumaBay
             }
             if (fogGoalLabel != null)
             {
-                fogGoalLabel.text = Localization.T("fog", Mathf.Min(clearedFog, currentLevel.FogCount), currentLevel.FogCount);
+                fogGoalLabel.text = Localization.T("fog",
+                    Mathf.Min(clearedFog, currentLevel.FogCount), currentLevel.FogCount);
             }
             if (walletLabel != null) walletLabel.text = $"◆ {save.Coins}";
         }
 
         private void ShowConfirmExitLevel()
         {
-            ShowModal(Localization.T("map"), Localization.T("level", currentLevel.Id), Localization.T("map"), ShowMap,
-                Localization.T("continue"));
+            ShowModal(Localization.T("map"),
+                Localization.Language == "en" ? "Leave this level? Current progress will be lost." : "Выйти из уровня? Текущий прогресс будет потерян.",
+                Localization.T("map"), ShowMap, Localization.T("continue"));
         }
     }
 }
