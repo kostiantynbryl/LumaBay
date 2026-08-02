@@ -25,13 +25,10 @@ namespace LumaBay.Editor
             EnsureScene();
             ConfigurePlayer();
             LumaBayBrandingGenerator.EnsureBranding();
-            LumaBayArtPackGenerator.GenerateAll();
-            LumaBayAudioPackGenerator.GenerateAll();
             ConfigureBuildSettings();
             AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
             EditorPrefs.SetBool(SetupVersionKey, true);
-            Debug.Log("Luma Bay 0.1.2 project setup completed.");
+            Debug.Log("Luma Bay 0.1.2 project setup completed. Art and audio packs are generated independently when missing.");
         }
 
         private static void EnsureProjectOnce()
