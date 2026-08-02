@@ -7,7 +7,7 @@ namespace LumaBay
 {
     public sealed partial class LumaBayGame : MonoBehaviour
     {
-        private const string Version = "0.1.1-alpha";
+        private const string Version = "0.1.2-alpha";
 
         private Canvas canvas;
         private RectTransform safeRoot;
@@ -34,6 +34,7 @@ namespace LumaBay
         private void Awake()
         {
             Application.targetFrameRate = 60;
+            QualitySettings.vSyncCount = 0;
             Input.multiTouchEnabled = false;
             save = SaveService.Load();
             Localization.Language = save.Language;
@@ -113,10 +114,14 @@ namespace LumaBay
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(720f, 1280f);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.45f;
+            scaler.matchWidthOrHeight = 0.5f;
 
-            Image background = CreateImage(canvasObject.transform, "Background", CoastalBackdropArt.Create(), Color.white);
+            Sprite backgroundSprite = LumaBayArtPack.Background != null
+                ? LumaBayArtPack.Background
+                : CoastalBackdropArt.Create();
+            Image background = CreateImage(canvasObject.transform, "Background", backgroundSprite, Color.white);
             Stretch(background.rectTransform);
+            background.preserveAspect = false;
             background.raycastTarget = false;
 
             RectTransform ambientLayer = CreateRect(canvasObject.transform, "AmbientLayer");
@@ -133,6 +138,7 @@ namespace LumaBay
 
             audioSynth = gameObject.AddComponent<AudioSynth>();
             audioSynth.Enabled = save.SoundEnabled;
+            audioSynth.MusicEnabled = save.MusicEnabled;
 
             if (EventSystem.current == null)
             {
