@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,107 +9,35 @@ namespace LumaBay
         private void BuildLighthouseArt(RectTransform parent, int progress)
         {
             RectTransform art = CreateRect(parent, "LighthouseArt");
-            art.anchorMin = new Vector2(0f, 0.27f);
-            art.anchorMax = Vector2.one;
-            art.offsetMin = new Vector2(15f, 8f);
-            art.offsetMax = new Vector2(-15f, -15f);
+            art.anchorMin = new Vector2(0.015f, 0.015f);
+            art.anchorMax = new Vector2(0.985f, 0.985f);
+            art.offsetMin = Vector2.zero;
+            art.offsetMax = Vector2.zero;
 
-            Image sky = CreateImage(art, "Sky", ProceduralArt.Rounded("lighthouse_sky", new Color(0.06f, 0.28f, 0.46f, 1f), 18), Color.white);
-            Stretch(sky.rectTransform);
-
-            Image sunGlow = CreateImage(art, "SunGlow", ProceduralArt.Pearl("sun_glow"), new Color(1f, 0.64f, 0.22f, 0.34f));
-            sunGlow.rectTransform.anchorMin = new Vector2(0.63f, 0.52f);
-            sunGlow.rectTransform.anchorMax = new Vector2(0.98f, 0.98f);
-            sunGlow.rectTransform.offsetMin = Vector2.zero;
-            sunGlow.rectTransform.offsetMax = Vector2.zero;
-            sunGlow.gameObject.AddComponent<SoftGlowPulse>();
-
-            for (int i = 0; i < 4; i++)
-            {
-                float t = i / 3f;
-                Image wave = CreateImage(art, $"Wave{i}", ProceduralArt.Rounded($"premium_wave_{i}",
-                    Color.Lerp(new Color(0.08f, 0.34f, 0.54f, 0.92f), new Color(0.12f, 0.66f, 0.76f, 0.66f), t), 9), Color.white);
-                RectTransform r = wave.rectTransform;
-                r.anchorMin = new Vector2(-0.05f + i * 0.018f, 0.025f + i * 0.040f);
-                r.anchorMax = new Vector2(1.05f, 0.10f + i * 0.040f);
-                r.offsetMin = Vector2.zero;
-                r.offsetMax = Vector2.zero;
-            }
-
-            Image island = CreateImage(art, "Island", ProceduralArt.Rounded("premium_island", new Color(0.10f, 0.16f, 0.14f, 1f), 20), Color.white);
-            island.rectTransform.anchorMin = new Vector2(0.14f, 0.10f);
-            island.rectTransform.anchorMax = new Vector2(0.87f, 0.27f);
-            island.rectTransform.offsetMin = Vector2.zero;
-            island.rectTransform.offsetMax = Vector2.zero;
-
-            Color towerColor = progress >= 50 ? new Color(0.94f, 0.90f, 0.78f) : new Color(0.54f, 0.56f, 0.53f);
-            Image towerShadow = CreateImage(art, "TowerShadow", ProceduralArt.Rounded("tower_shadow", NauticalTheme.Shadow, 12), Color.white);
-            towerShadow.rectTransform.anchorMin = new Vector2(0.405f, 0.205f);
-            towerShadow.rectTransform.anchorMax = new Vector2(0.625f, 0.775f);
-            towerShadow.rectTransform.offsetMin = new Vector2(5f, -5f);
-            towerShadow.rectTransform.offsetMax = new Vector2(5f, -5f);
-
-            Image tower = CreateImage(art, "Tower", ProceduralArt.OrnateFrame("tower", towerColor, true), Color.white);
-            tower.rectTransform.anchorMin = new Vector2(0.39f, 0.21f);
-            tower.rectTransform.anchorMax = new Vector2(0.61f, 0.78f);
-            tower.rectTransform.offsetMin = Vector2.zero;
-            tower.rectTransform.offsetMax = Vector2.zero;
-
-            for (int i = 0; i < 3; i++)
-            {
-                Image stripe = CreateImage(tower.rectTransform, $"Stripe{i}", ProceduralArt.Rounded($"premium_stripe_{i}",
-                    progress > i * 20 ? NauticalTheme.Coral : new Color(0.28f, 0.29f, 0.28f), 5), Color.white);
-                float bottom = 0.13f + i * 0.26f;
-                stripe.rectTransform.anchorMin = new Vector2(0.035f, bottom);
-                stripe.rectTransform.anchorMax = new Vector2(0.965f, bottom + 0.12f);
-                stripe.rectTransform.offsetMin = Vector2.zero;
-                stripe.rectTransform.offsetMax = Vector2.zero;
-            }
-
-            Image lampRoom = CreateImage(art, "LampRoom", ProceduralArt.OrnateFrame("lamp_room",
-                progress >= 80 ? new Color(1f, 0.70f, 0.18f, 1f) : new Color(0.30f, 0.34f, 0.36f, 1f), true), Color.white);
-            lampRoom.rectTransform.anchorMin = new Vector2(0.34f, 0.74f);
-            lampRoom.rectTransform.anchorMax = new Vector2(0.66f, 0.87f);
-            lampRoom.rectTransform.offsetMin = Vector2.zero;
-            lampRoom.rectTransform.offsetMax = Vector2.zero;
-            if (progress >= 80) lampRoom.gameObject.AddComponent<SoftGlowPulse>();
-
-            Image roof = CreateImage(art, "Roof", ProceduralArt.Rounded("premium_roof", new Color(0.30f, 0.075f, 0.055f), 10), Color.white);
-            roof.rectTransform.anchorMin = new Vector2(0.375f, 0.855f);
-            roof.rectTransform.anchorMax = new Vector2(0.625f, 0.925f);
-            roof.rectTransform.offsetMin = Vector2.zero;
-            roof.rectTransform.offsetMax = Vector2.zero;
-
-            if (progress >= 100)
-            {
-                Image leftBeam = CreateImage(art, "LeftBeam", null, new Color(1f, 0.82f, 0.28f, 0.38f));
-                leftBeam.rectTransform.anchorMin = new Vector2(0.01f, 0.79f);
-                leftBeam.rectTransform.anchorMax = new Vector2(0.43f, 0.835f);
-                leftBeam.rectTransform.offsetMin = Vector2.zero;
-                leftBeam.rectTransform.offsetMax = Vector2.zero;
-                leftBeam.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 7f);
-                leftBeam.gameObject.AddComponent<SoftGlowPulse>();
-
-                Image rightBeam = CreateImage(art, "RightBeam", null, new Color(1f, 0.82f, 0.28f, 0.38f));
-                rightBeam.rectTransform.anchorMin = new Vector2(0.57f, 0.79f);
-                rightBeam.rectTransform.anchorMax = new Vector2(0.99f, 0.835f);
-                rightBeam.rectTransform.offsetMin = Vector2.zero;
-                rightBeam.rectTransform.offsetMax = Vector2.zero;
-                rightBeam.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -7f);
-                rightBeam.gameObject.AddComponent<SoftGlowPulse>();
-            }
+            int state = Mathf.Clamp(Mathf.RoundToInt(progress / 100f * 31f), 0, 31);
+            Sprite sprite = LumaBayArtPack.LighthouseState(state) ?? CoastalBackdropArt.Create();
+            Image image = CreateImage(art, "LighthouseFallbackIllustration", sprite, Color.white);
+            Stretch(image.rectTransform);
+            image.preserveAspect = false;
+            image.raycastTarget = false;
+            image.gameObject.AddComponent<LighthouseIllustrationMotion>();
         }
 
         private void CreateProgressBar(Transform parent, float value)
         {
-            RectTransform track = CreatePanel(parent, "ProgressTrack", NauticalTheme.Midnight);
+            RectTransform track = CreateRect(parent, "ProgressTrack");
+            Image trackImage = track.gameObject.AddComponent<Image>();
+            trackImage.sprite = LumaBayArtPack.ProgressTrack ?? ProceduralArt.Rounded("progress_track", new Color(0.01f, 0.06f, 0.11f, 0.96f), 14);
+            trackImage.type = Image.Type.Sliced;
             SetLayout(track, 30f);
-            Image fill = CreateImage(track, "Fill", ProceduralArt.OrnateFrame("progress_fill", NauticalTheme.Gold, true), Color.white);
-            fill.rectTransform.anchorMin = new Vector2(0f, 0f);
+
+            Image fill = CreateImage(track, "Fill",
+                LumaBayArtPack.ProgressFill ?? ProceduralArt.Rounded("progress_fill", NauticalTheme.Gold, 14), Color.white);
+            fill.type = Image.Type.Sliced;
+            fill.rectTransform.anchorMin = Vector2.zero;
             fill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(value), 1f);
-            fill.rectTransform.offsetMin = new Vector2(4f, 4f);
-            fill.rectTransform.offsetMax = new Vector2(-4f, -4f);
-            if (value > 0f) fill.gameObject.AddComponent<SoftGlowPulse>();
+            fill.rectTransform.offsetMin = new Vector2(3f, 3f);
+            fill.rectTransform.offsetMax = new Vector2(-3f, -3f);
         }
 
         private RectTransform CreateVerticalScreen(int padding, float spacing)
@@ -152,17 +79,20 @@ namespace LumaBay
         private RectTransform CreatePanel(Transform parent, string name, Color color)
         {
             RectTransform rect = CreateRect(parent, name);
-            Image shadow = CreateImage(rect, "PanelShadow", ProceduralArt.Rounded($"{name}_shadow", NauticalTheme.Shadow, 18), Color.white);
-            Stretch(shadow.rectTransform);
-            shadow.rectTransform.offsetMin += new Vector2(4f, -7f);
-            shadow.rectTransform.offsetMax += new Vector2(4f, -7f);
-            shadow.raycastTarget = false;
-
             Image image = rect.gameObject.AddComponent<Image>();
             image.sprite = ProceduralArt.OrnateFrame(name, color, true);
             image.type = Image.Type.Sliced;
             image.color = Color.white;
-            AddEntrance(rect, 0f, new Vector2(0f, -16f), 0.97f);
+
+            if (!name.StartsWith("Cell_", StringComparison.Ordinal) &&
+                !name.Contains("Progress", StringComparison.OrdinalIgnoreCase))
+            {
+                Shadow shadow = rect.gameObject.AddComponent<Shadow>();
+                shadow.effectColor = new Color(0f, 0f, 0f, 0.32f);
+                shadow.effectDistance = new Vector2(3f, -5f);
+                shadow.useGraphicAlpha = true;
+                AddEntrance(rect, 0f, new Vector2(0f, -12f), 0.985f);
+            }
             return rect;
         }
 
@@ -170,16 +100,25 @@ namespace LumaBay
         {
             RectTransform rect = CreateRect(parent, "Button");
             Image image = rect.gameObject.AddComponent<Image>();
-            image.sprite = ProceduralArt.OrnateFrame($"button_{label}", background, true);
+            float luminance = background.r * 0.30f + background.g * 0.59f + background.b * 0.11f;
+            Sprite authored = luminance > 0.36f ? LumaBayArtPack.ButtonPrimary : LumaBayArtPack.ButtonSecondary;
+            image.sprite = authored ?? ProceduralArt.OrnateFrame($"button_{label}", background, true);
             image.type = Image.Type.Sliced;
+            image.color = authored != null ? Color.Lerp(Color.white, background, 0.16f) : Color.white;
+
+            Shadow shadow = rect.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.34f);
+            shadow.effectDistance = new Vector2(2f, -4f);
+            shadow.useGraphicAlpha = true;
 
             Button button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
             ColorBlock colors = button.colors;
             colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1.10f, 1.08f, 1.02f);
-            colors.pressedColor = new Color(0.79f, 0.83f, 0.87f);
-            colors.disabledColor = new Color(0.38f, 0.40f, 0.43f, 0.72f);
+            colors.highlightedColor = new Color(1.06f, 1.06f, 1.06f, 1f);
+            colors.pressedColor = new Color(0.84f, 0.88f, 0.91f, 1f);
+            colors.selectedColor = Color.white;
+            colors.disabledColor = new Color(0.40f, 0.44f, 0.48f, 0.74f);
             colors.fadeDuration = 0.07f;
             button.colors = colors;
             button.onClick.AddListener(() =>
@@ -190,8 +129,11 @@ namespace LumaBay
             rect.gameObject.AddComponent<UiPressFeedback>();
 
             Text text = CreateText(rect, label, size, TextAnchor.MiddleCenter, foreground, FontStyle.Bold);
-            Stretch(text.rectTransform, 12f);
+            Stretch(text.rectTransform, 11f);
             text.raycastTarget = false;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = Mathf.Max(13, size - 9);
+            text.resizeTextMaxSize = size;
             return button;
         }
 
@@ -199,8 +141,10 @@ namespace LumaBay
         {
             RectTransform card = CreateRect(parent, $"Booster_{title}");
             Image image = card.gameObject.AddComponent<Image>();
-            image.sprite = ProceduralArt.OrnateFrame($"booster_{title}", Color.Lerp(NauticalTheme.Navy, accent, 0.22f), true);
+            image.sprite = LumaBayArtPack.BoosterCard ?? ProceduralArt.OrnateFrame($"booster_{title}", Color.Lerp(NauticalTheme.Navy, accent, 0.18f), true);
             image.type = Image.Type.Sliced;
+            image.color = Color.white;
+
             Button button = card.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
             button.onClick.AddListener(() =>
@@ -211,19 +155,21 @@ namespace LumaBay
             card.gameObject.AddComponent<UiPressFeedback>();
 
             VerticalLayoutGroup layout = card.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(8, 8, 10, 10);
+            layout.padding = new RectOffset(7, 7, 8, 8);
             layout.spacing = 1f;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childForceExpandHeight = false;
             layout.childForceExpandWidth = true;
 
-            Text iconText = CreateText(card, icon, 34, TextAnchor.MiddleCenter, NauticalTheme.Pearl, FontStyle.Bold);
-            SetLayout(iconText.rectTransform, 42f);
-            Text titleText = CreateText(card, title, 16, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
-            SetLayout(titleText.rectTransform, 42f);
-            Text costText = CreateText(card, $"◆ {cost}", 18, TextAnchor.MiddleCenter, NauticalTheme.GoldLight, FontStyle.Bold);
-            SetLayout(costText.rectTransform, 28f);
-            AddEntrance(card, 0.03f, new Vector2(0f, 24f), 0.92f);
+            Text iconText = CreateText(card, icon, 31, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
+            SetLayout(iconText.rectTransform, 40f);
+            Text titleText = CreateText(card, title, 15, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
+            titleText.resizeTextForBestFit = true;
+            titleText.resizeTextMinSize = 11;
+            titleText.resizeTextMaxSize = 15;
+            SetLayout(titleText.rectTransform, 38f);
+            Text costText = CreateText(card, $"◆ {cost}", 17, TextAnchor.MiddleCenter, NauticalTheme.GoldLight, FontStyle.Bold);
+            SetLayout(costText.rectTransform, 26f);
             return button;
         }
 
@@ -242,8 +188,8 @@ namespace LumaBay
             text.verticalOverflow = VerticalWrapMode.Truncate;
 
             Shadow shadow = rect.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.72f);
-            shadow.effectDistance = new Vector2(1.8f, -2.4f);
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.70f);
+            shadow.effectDistance = new Vector2(1.5f, -2f);
             shadow.useGraphicAlpha = true;
             return text;
         }
@@ -256,12 +202,6 @@ namespace LumaBay
             image.color = color;
             image.preserveAspect = sprite != null;
             return image;
-        }
-
-        private void AddEntrance(RectTransform rect, float delay, Vector2 offset, float scale)
-        {
-            UiEntranceMotion motion = rect.gameObject.AddComponent<UiEntranceMotion>();
-            motion.Configure(delay, offset, scale);
         }
 
         private static RectTransform CreateRect(Transform parent, string name)
@@ -286,8 +226,8 @@ namespace LumaBay
             LayoutElement element = rect.GetComponent<LayoutElement>();
             if (element == null) element = rect.gameObject.AddComponent<LayoutElement>();
             if (preferredHeight >= 0f) element.preferredHeight = preferredHeight;
-            if (preferredWidth > 0f) element.preferredWidth = preferredWidth;
-            if (preferredWidth == 1f) element.flexibleWidth = 1f;
+            if (preferredWidth > 1f) element.preferredWidth = preferredWidth;
+            else if (Mathf.Approximately(preferredWidth, 1f)) element.flexibleWidth = 1f;
         }
 
         private static void AddFlexibleSpacer(Transform parent, float flexibleHeight)
@@ -296,6 +236,13 @@ namespace LumaBay
             LayoutElement element = spacer.gameObject.AddComponent<LayoutElement>();
             element.flexibleHeight = flexibleHeight;
             element.minHeight = 1f;
+        }
+
+        private static void AddEntrance(RectTransform rect, float delay, Vector2 offset, float startScale)
+        {
+            UiEntranceMotion motion = rect.gameObject.GetComponent<UiEntranceMotion>();
+            if (motion == null) motion = rect.gameObject.AddComponent<UiEntranceMotion>();
+            motion.Configure(delay, offset, startScale);
         }
 
         private void ClearScreen()
@@ -312,14 +259,15 @@ namespace LumaBay
             collectGoalLabel = null;
             fogGoalLabel = null;
             walletLabel = null;
+            artOverrideSignature = int.MinValue;
+            configuredGoalsPanelId = int.MinValue;
+            boardPresentationSignature = int.MinValue;
         }
 
         private static void DestroyChildren(Transform parent)
         {
-            for (int i = parent.childCount - 1; i >= 0; i--)
-            {
-                Destroy(parent.GetChild(i).gameObject);
-            }
+            if (parent == null) return;
+            for (int i = parent.childCount - 1; i >= 0; i--) Destroy(parent.GetChild(i).gameObject);
         }
     }
 }
