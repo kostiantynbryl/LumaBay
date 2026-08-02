@@ -46,6 +46,7 @@ namespace LumaBay
         {
             RefreshGoalPresentationIfNeeded();
             RefreshBoardPresentationIfNeeded();
+            RefreshArtOverridesIfNeeded();
         }
 
         private void OnApplicationPause(bool pause)
@@ -62,7 +63,7 @@ namespace LumaBay
         {
             if (boardBusy || levelFinished || board == null) return;
             selectedCell = null;
-            AttemptMove(new Vector2Int(x, y), new Vector2Int(x + direction.x, y + direction.y));
+            BeginAnimatedMove(new Vector2Int(x, y), new Vector2Int(x + direction.x, y + direction.y));
         }
 
         public void OnPieceTapped(int x, int y)
@@ -89,7 +90,7 @@ namespace LumaBay
             if (distance == 1)
             {
                 selectedCell = null;
-                AttemptMove(previous, tapped);
+                BeginAnimatedMove(previous, tapped);
             }
             else
             {
