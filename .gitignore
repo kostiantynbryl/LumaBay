@@ -9,8 +9,9 @@ UserSettings/
 MemoryCaptures/
 Recordings/
 
-# Luma Bay editor-generated branding
+# Luma Bay editor-generated assets (reproducible from source generators)
 Assets/LumaBay/Generated/
+Assets/LumaBay/Resources/
 
 # IDE
 .vs/
