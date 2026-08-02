@@ -59,5 +59,23 @@ namespace LumaBay.Tests
             Assert.IsFalse(valid);
             Assert.IsFalse(result.Valid);
         }
+
+        [Test]
+        public void CrateLayerReductionConsumesCurrentPiece()
+        {
+            var cell = new BoardCell
+            {
+                Piece = PieceKind.Crystal,
+                Special = SpecialKind.Bomb,
+                Obstacle = ObstacleKind.Crate,
+                ObstacleLayers = 2
+            };
+
+            cell.ObstacleLayers = 1;
+
+            Assert.AreEqual(PieceKind.None, cell.Piece);
+            Assert.AreEqual(SpecialKind.None, cell.Special);
+            Assert.AreEqual(1, cell.ObstacleLayers);
+        }
     }
 }
