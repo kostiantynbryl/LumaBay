@@ -1,0 +1,107 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace LumaBay
+{
+    public static class LumaBayArtPack
+    {
+        private static readonly Dictionary<string, Sprite> SpriteCache = new Dictionary<string, Sprite>();
+        private static readonly Dictionary<string, AudioClip> AudioCache = new Dictionary<string, AudioClip>();
+        private static readonly Dictionary<string, Sprite> TintedFrameCache = new Dictionary<string, Sprite>();
+
+        public static bool IsAvailable => LoadSprite("ui/panel_glass") != null;
+
+        public static Sprite Background => LoadSprite("backgrounds/coastal_sunset");
+        public static Sprite Panel => LoadSprite("ui/panel_glass");
+        public static Sprite ButtonPrimary => LoadSprite("ui/button_primary");
+        public static Sprite ButtonSecondary => LoadSprite("ui/button_secondary");
+        public static Sprite BoosterCard => LoadSprite("ui/booster_card");
+        public static Sprite GoalChip => LoadSprite("ui/goal_chip");
+        public static Sprite ProgressTrack => LoadSprite("ui/progress_track");
+        public static Sprite ProgressFill => LoadSprite("ui/progress_fill");
+
+        public static Sprite Piece(PieceKind kind)
+        {
+            return LoadSprite($"pieces/piece_{kind.ToString().ToLowerInvariant()}");
+        }
+
+        public static Sprite Booster(string id)
+        {
+            return LoadSprite($"boosters/{id}");
+        }
+
+        public static Sprite LighthouseState(int state)
+        {
+            return LoadSprite($"lighthouse/lighthouse_{Mathf.Clamp(state, 0, 31):00}");
+        }
+
+        public static AudioClip Audio(string id)
+        {
+            if (AudioCache.TryGetValue(id, out AudioClip cached)) return cached;
+            AudioClip clip = Resources.Load<AudioClip>($"Audio/{id}");
+            AudioCache[id] = clip;
+            return clip;
+        }
+
+        public static Sprite TintedPanel(Color tint, bool elevated)
+        {
+            Sprite source = Panel;
+            if (source == null || source.texture == null || !source.texture.isReadable) return source;
+
+            string key = $"{ColorUtility.ToHtmlStringRGBA(tint)}_{elevated}";
+            if (TintedFrameCache.TryGetValue(key, out Sprite cached)) return cached;
+
+            Texture2D original = source.texture;
+            Color[] pixels = original.GetPixels();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color p = pixels[i];
+                float goldSignal = Mathf.Clamp01((p.r - p.b) * 2.4f + (p.g - p.b) * 1.2f);
+                Color glass = new Color(
+                    tint.r * Mathf.Lerp(0.62f, 1.08f, p.r),
+                    tint.g * Mathf.Lerp(0.62f, 1.08f, p.g),
+                    tint.b * Mathf.Lerp(0.62f, 1.08f, p.b),
+                    p.a * Mathf.Clamp01(tint.a + 0.22f));
+                Color gold = Color.Lerp(new Color(0.56f, 0.34f, 0.10f, p.a), new Color(1f, 0.84f, 0.42f, p.a), p.r);
+                pixels[i] = Color.Lerp(glass, gold, goldSignal);
+            }
+
+            var texture = new Texture2D(original.width, original.height, TextureFormat.RGBA32, false)
+            {
+                name = $"panel_{key}",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixels(pixels);
+            texture.Apply();
+            Vector4 border = source.border;
+            Sprite result = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f), source.pixelsPerUnit, 0, SpriteMeshType.FullRect, border);
+            result.name = texture.name;
+            TintedFrameCache[key] = result;
+            return result;
+        }
+
+        public static void ClearRuntimeCache()
+        {
+            SpriteCache.Clear();
+            AudioCache.Clear();
+            foreach (Sprite sprite in TintedFrameCache.Values)
+            {
+                if (sprite == null) continue;
+                Texture2D texture = sprite.texture;
+                Object.Destroy(sprite);
+                if (texture != null) Object.Destroy(texture);
+            }
+            TintedFrameCache.Clear();
+        }
+
+        private static Sprite LoadSprite(string relativePath)
+        {
+            if (SpriteCache.TryGetValue(relativePath, out Sprite cached)) return cached;
+            Sprite sprite = Resources.Load<Sprite>($"ArtPack/{relativePath}");
+            SpriteCache[relativePath] = sprite;
+            return sprite;
+        }
+    }
+}
