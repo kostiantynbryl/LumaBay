@@ -20,6 +20,7 @@ REQUIRED = [
     "Assets/LumaBay/Runtime/LumaBayGame.Obstacles.cs",
     "Assets/LumaBay/Runtime/LumaBayGame.ArtOverrides.cs",
     "Assets/LumaBay/Runtime/LumaBayGame.MoveAnimation.cs",
+    "Assets/LumaBay/Runtime/LumaBayGame.Hints.cs",
     "Assets/LumaBay/Runtime/Meta/LighthouseTaskCatalog.cs",
     "Assets/LumaBay/Runtime/Model/Match3Board.cs",
     "Assets/LumaBay/Runtime/Model/BoardBoosters.cs",
@@ -95,6 +96,9 @@ def check_mobile_configuration() -> None:
             fail(f"Android configuration token missing: {token}")
     if "BuildOptions.Development" in build or "development = true" in build:
         fail("0.1.2 control build must not be a development build")
+    for token in ("ArtSentinel", "AudioSentinel", "LumaBayArtPackGenerator.GenerateAll", "LumaBayAudioPackGenerator.GenerateAll"):
+        if token not in build:
+            fail(f"generated-asset build guard missing: {token}")
 
 
 def check_campaign_and_meta() -> None:
@@ -153,6 +157,7 @@ def check_gameplay_features() -> None:
     localization = read("Assets/LumaBay/Runtime/Services/Localization.cs")
     goals = read("Assets/LumaBay/Runtime/LumaBayGame.Goals.cs")
     obstacles = read("Assets/LumaBay/Runtime/LumaBayGame.Obstacles.cs")
+    hints = read("Assets/LumaBay/Runtime/LumaBayGame.Hints.cs")
 
     for obstacle in ("Crate", "Ice", "Net"):
         if obstacle not in game_types or obstacle not in board:
@@ -167,6 +172,9 @@ def check_gameplay_features() -> None:
         fail("visual goal icons are incomplete")
     if "SpawnBoardBurst" not in obstacles or "UiBurstParticle" not in obstacles:
         fail("board match sparkle effect is incomplete")
+    for token in ("BoardHintFinder", "PieceHintMotion", "TryFind", "NotifyPlayerInteraction"):
+        if token not in hints:
+            fail(f"idle move hint token missing: {token}")
 
 
 def check_unity_lifecycle() -> None:
@@ -187,7 +195,12 @@ def check_unity_lifecycle() -> None:
         if re.search(r"\bprivate\s+void\s+(?:Update|LateUpdate)\s*\(\s*\)", source):
             fail(f"duplicate Unity lifecycle method in partial file: {relative}")
 
-    for helper in ("RefreshGoalPresentationIfNeeded", "RefreshBoardPresentationIfNeeded", "RefreshArtOverridesIfNeeded"):
+    for helper in (
+        "RefreshGoalPresentationIfNeeded",
+        "RefreshBoardPresentationIfNeeded",
+        "RefreshArtOverridesIfNeeded",
+        "UpdateHintAnimation",
+    ):
         if helper not in main:
             fail(f"central lifecycle helper missing from main class: {helper}")
 
