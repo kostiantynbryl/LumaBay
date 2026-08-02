@@ -19,11 +19,13 @@ namespace LumaBay
 
             int childCount = screenRoot.childCount;
             int firstId = childCount > 0 ? screenRoot.GetChild(0).GetInstanceID() : 0;
-            int signature = childCount * 486187739 ^ firstId;
+            int taskIndex = save != null ? save.LighthouseTaskIndex : 0;
+            int signature = childCount * 486187739 ^ firstId ^ taskIndex * 397;
             if (signature == artOverrideSignature) return;
             artOverrideSignature = signature;
 
             ApplyLighthouseIllustrations(screenRoot);
+            ApplyLighthouseTaskControls(screenRoot);
             ApplyBoosterArtwork(screenRoot);
             ApplyCleanerBoardCells(screenRoot);
         }
@@ -32,7 +34,9 @@ namespace LumaBay
         {
             foreach (Transform lighthouseArt in FindRecursive(root, "LighthouseArt"))
             {
-                if (lighthouseArt.Find("PremiumLighthouseIllustration") != null) continue;
+                Transform existing = lighthouseArt.Find("PremiumLighthouseIllustration");
+                if (existing != null) Destroy(existing.gameObject);
+
                 Sprite sprite = LumaBayArtPack.LighthouseState(save != null ? save.LighthouseVisualState : 0);
                 if (sprite == null) continue;
 
@@ -42,6 +46,9 @@ namespace LumaBay
                 illustration.raycastTarget = false;
                 illustration.transform.SetAsLastSibling();
                 illustration.gameObject.AddComponent<LighthouseIllustrationMotion>();
+
+                Transform oldBadge = lighthouseArt.Find("CurrentTaskBadge");
+                if (oldBadge != null) Destroy(oldBadge.gameObject);
 
                 RectTransform badge = CreatePanel(lighthouseArt, "CurrentTaskBadge", new Color(0.018f, 0.09f, 0.16f, 0.90f));
                 badge.anchorMin = new Vector2(0.055f, 0.025f);
@@ -64,6 +71,127 @@ namespace LumaBay
                 Stretch(text.rectTransform, 10f);
                 text.raycastTarget = false;
             }
+        }
+
+        private void ApplyLighthouseTaskControls(Transform root)
+        {
+            if (save == null) return;
+            LighthouseTask task = save.LighthouseComplete ? null : LighthouseTaskCatalog.Get(save.LighthouseTaskIndex);
+            int percent = Mathf.RoundToInt(save.LighthouseProgress01 * 100f);
+
+            foreach (Text text in root.GetComponentsInChildren<Text>(true))
+            {
+                if (text == null) continue;
+                string value = text.text ?? string.Empty;
+                if (value.StartsWith("Прогресс:", StringComparison.OrdinalIgnoreCase) ||
+                    value.StartsWith("Progress:", StringComparison.OrdinalIgnoreCase))
+                {
+                    text.text = Localization.Language == "en" ? $"Progress: {percent}%" : $"Прогресс: {percent}%";
+                }
+            }
+
+            foreach (Transform track in FindRecursive(root, "ProgressTrack"))
+            {
+                Transform fill = track.Find("Fill");
+                if (fill is RectTransform fillRect)
+                {
+                    fillRect.anchorMax = new Vector2(save.LighthouseProgress01, 1f);
+                }
+            }
+
+            foreach (Transform storyPanel in FindRecursive(root, "StoryPanel"))
+            {
+                Text story = storyPanel.GetComponentInChildren<Text>(true);
+                if (story != null)
+                {
+                    story.text = task != null
+                        ? task.Description
+                        : (Localization.Language == "en"
+                            ? "The restored lighthouse now guides ships and reveals a signal from the distant island."
+                            : "Восстановленный маяк ведёт корабли и принимает сигнал с далёкого острова.");
+                }
+            }
+
+            foreach (Transform heroCaption in FindRecursive(root, "HeroCaption"))
+            {
+                Text caption = heroCaption.GetComponentInChildren<Text>(true);
+                if (caption != null)
+                {
+                    string title = Localization.Language == "en" ? "Lighthouse restoration" : "Восстановление маяка";
+                    caption.text = $"{title}\n{percent}% • {save.LighthouseTaskIndex}/{LighthouseTaskCatalog.Count}";
+                }
+            }
+
+            foreach (Button button in root.GetComponentsInChildren<Button>(true))
+            {
+                Text label = button.GetComponentInChildren<Text>(true);
+                if (label == null || !LooksLikeRestoreButton(label.text)) continue;
+
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(RestoreNextLighthouseTask);
+                button.interactable = true;
+
+                if (task == null)
+                {
+                    label.text = Localization.Language == "en" ? "LIGHTHOUSE COMPLETE" : "МАЯК ПОЛНОСТЬЮ ВОССТАНОВЛЕН";
+                    button.interactable = false;
+                }
+                else if (save.UnlockedLevel < task.UnlockLevel)
+                {
+                    label.text = Localization.Language == "en"
+                        ? $"UNLOCKS AFTER LEVEL {task.UnlockLevel}"
+                        : $"ОТКРОЕТСЯ ПОСЛЕ УРОВНЯ {task.UnlockLevel}";
+                }
+                else
+                {
+                    label.text = $"{task.StarCost} ★  •  {task.Title.ToUpperInvariant()}";
+                }
+
+                label.resizeTextForBestFit = true;
+                label.resizeTextMinSize = 15;
+                label.resizeTextMaxSize = 26;
+            }
+        }
+
+        private static bool LooksLikeRestoreButton(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            string upper = value.ToUpperInvariant();
+            return upper.Contains("ВОССТАНОВ") || upper.Contains("РЕМОНТ") ||
+                   upper.Contains("RESTORE") || upper.Contains("RESTORATION REQUIRES");
+        }
+
+        private void RestoreNextLighthouseTask()
+        {
+            if (save == null || save.LighthouseComplete)
+            {
+                ShowToast(Localization.Language == "en" ? "The lighthouse is complete" : "Маяк полностью восстановлен");
+                return;
+            }
+
+            LighthouseTask task = LighthouseTaskCatalog.Get(save.LighthouseTaskIndex);
+            if (save.UnlockedLevel < task.UnlockLevel)
+            {
+                ShowToast(Localization.Language == "en"
+                    ? $"Complete level {task.UnlockLevel} first"
+                    : $"Сначала пройдите уровень {task.UnlockLevel}");
+                return;
+            }
+            if (save.AvailableStars < task.StarCost)
+            {
+                ShowToast(Localization.Language == "en"
+                    ? $"You need {task.StarCost} stars"
+                    : $"Нужно звёзд: {task.StarCost}");
+                return;
+            }
+
+            save.AvailableStars -= task.StarCost;
+            save.LighthouseTaskIndex++;
+            save.RestorationStep = Mathf.Clamp(save.LighthouseTaskIndex / 8, 0, 6);
+            SaveService.Save(save);
+            audioSynth.PlayRestore();
+            if (save.VibrationEnabled) Handheld.Vibrate();
+            ShowMap();
         }
 
         private void ApplyBoosterArtwork(Transform root)
