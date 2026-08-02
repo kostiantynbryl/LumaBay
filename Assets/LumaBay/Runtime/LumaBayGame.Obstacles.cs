@@ -9,7 +9,7 @@ namespace LumaBay
         private int boardPresentationSignature = int.MinValue;
         private System.Random visualRandom = new System.Random(3187);
 
-        private void LateUpdate()
+        private void RefreshBoardPresentationIfNeeded()
         {
             if (boardGrid == null || board == null)
             {
@@ -79,6 +79,8 @@ namespace LumaBay
             for (int i = 0; i < count; i++)
             {
                 RectTransform particle = CreateRect(boardGrid, "MatchSparkle");
+                LayoutElement layoutElement = particle.gameObject.AddComponent<LayoutElement>();
+                layoutElement.ignoreLayout = true;
                 particle.anchorMin = new Vector2(0.5f, 0.5f);
                 particle.anchorMax = new Vector2(0.5f, 0.5f);
                 particle.pivot = new Vector2(0.5f, 0.5f);
