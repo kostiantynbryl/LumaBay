@@ -41,6 +41,12 @@ namespace LumaBay
             ShowMainMenu();
         }
 
+        private void Update()
+        {
+            RefreshGoalPresentationIfNeeded();
+            RefreshBoardPresentationIfNeeded();
+        }
+
         private void OnApplicationPause(bool pause)
         {
             if (pause && save != null) SaveService.Save(save);
