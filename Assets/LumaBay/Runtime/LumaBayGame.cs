@@ -109,7 +109,7 @@ namespace LumaBay
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.45f;
 
-            Image background = CreateImage(canvasObject.transform, "Background", ProceduralArt.Background(), Color.white);
+            Image background = CreateImage(canvasObject.transform, "Background", CoastalBackdropArt.Create(), Color.white);
             Stretch(background.rectTransform);
             background.raycastTarget = false;
 
