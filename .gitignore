@@ -9,6 +9,9 @@ UserSettings/
 MemoryCaptures/
 Recordings/
 
+# Luma Bay editor-generated branding
+Assets/LumaBay/Generated/
+
 # IDE
 .vs/
 .vscode/
