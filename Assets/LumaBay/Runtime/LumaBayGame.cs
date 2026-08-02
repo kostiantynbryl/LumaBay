@@ -8,7 +8,7 @@ namespace LumaBay
 {
     public sealed partial class LumaBayGame : MonoBehaviour
     {
-        private const string Version = "0.1.0-alpha";
+        private const string Version = "0.1.1-alpha";
         private static readonly string[] PieceSymbols = { "S", "A", "L", "C", "D", "F" };
 
         private Canvas canvas;
