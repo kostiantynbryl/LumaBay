@@ -22,6 +22,9 @@ namespace LumaBay
                 TargetPiece = source.TargetPiece,
                 TargetCount = source.TargetCount,
                 FogCount = source.FogCount,
+                CrateCount = source.CrateCount,
+                IceCount = source.IceCount,
+                NetCount = source.NetCount,
                 Seed = source.Seed
             };
         }
@@ -33,17 +36,38 @@ namespace LumaBay
             {
                 int chapter = (id - 1) / 10;
                 int withinChapter = (id - 1) % 10;
-                int fog = id < 4 ? 0 : Math.Min(22, 4 + (id - 4) / 2 + chapter * 3);
-                int moves = Math.Max(17, 26 - chapter * 2 - withinChapter / 4);
-                int target = 10 + id + chapter * 2;
+
+                int fog = id < 4 ? 0 : Math.Min(18, 3 + (id - 4) / 3 + chapter * 2);
+                int crates = id < 6 ? 0 : Math.Min(14, 2 + (id - 6) / 3 + chapter * 2);
+                int ice = id < 11 ? 0 : Math.Min(14, 2 + (id - 11) / 3 + chapter * 2);
+                int nets = id < 17 ? 0 : Math.Min(9, 1 + (id - 17) / 4 + chapter);
+
+                int moves = 27 - chapter - withinChapter / 4;
+                int target = 10 + id + chapter;
+
+                if (id <= 3)
+                {
+                    moves += 3;
+                    target -= 2;
+                }
+                if (id == 10 || id == 20 || id == 30)
+                {
+                    moves += 2;
+                    target += 5;
+                    fog += 2;
+                    crates += 2;
+                }
 
                 levels.Add(new LevelDefinition
                 {
                     Id = id,
-                    Moves = moves,
+                    Moves = Math.Max(18, moves),
                     TargetPiece = (PieceKind)((id - 1) % 6),
-                    TargetCount = target,
+                    TargetCount = Math.Max(8, target),
                     FogCount = fog,
+                    CrateCount = crates,
+                    IceCount = ice,
+                    NetCount = nets,
                     Seed = 4100 + id * 97
                 });
             }
