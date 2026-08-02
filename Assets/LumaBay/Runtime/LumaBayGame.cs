@@ -97,7 +97,7 @@ namespace LumaBay
         private void BuildApplicationShell()
         {
             CreateRuntimeCamera();
-            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font = ResolveRuntimeFont();
 
             GameObject canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasObject.transform.SetParent(transform, false);
@@ -130,6 +130,71 @@ namespace LumaBay
                 GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
                 eventSystem.transform.SetParent(transform, false);
             }
+        }
+
+        private static Font ResolveRuntimeFont()
+        {
+            string[] preferredFonts =
+            {
+                "Segoe UI",
+                "Roboto",
+                "Arial",
+                "Noto Sans",
+                "DejaVu Sans",
+                "sans-serif"
+            };
+
+            try
+            {
+                string[] installedFonts = Font.GetOSInstalledFontNames();
+                if (installedFonts != null)
+                {
+                    foreach (string preferred in preferredFonts)
+                    {
+                        foreach (string installed in installedFonts)
+                        {
+                            if (!string.Equals(preferred, installed, StringComparison.OrdinalIgnoreCase)) continue;
+                            Font osFont = Font.CreateDynamicFontFromOSFont(installed, 32);
+                            if (osFont != null)
+                            {
+                                Debug.Log($"Luma Bay UI font: {installed}");
+                                return osFont;
+                            }
+                        }
+                    }
+
+                    if (installedFonts.Length > 0)
+                    {
+                        Font firstAvailable = Font.CreateDynamicFontFromOSFont(installedFonts[0], 32);
+                        if (firstAvailable != null)
+                        {
+                            Debug.Log($"Luma Bay UI fallback font: {installedFonts[0]}");
+                            return firstAvailable;
+                        }
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"Unable to load an operating-system font: {exception.Message}");
+            }
+
+            try
+            {
+                Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                if (legacyFont != null)
+                {
+                    Debug.Log("Luma Bay UI fallback font: LegacyRuntime.ttf");
+                    return legacyFont;
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"Unable to load Unity's legacy runtime font: {exception.Message}");
+            }
+
+            Debug.LogError("Luma Bay could not load a runtime UI font. Text will not be visible.");
+            return null;
         }
 
         private void CreateRuntimeCamera()
