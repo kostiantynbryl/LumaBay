@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -34,6 +35,15 @@ namespace LumaBay
         {
             if (rect == null) rect = transform as RectTransform;
             if (group == null) group = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+
+            if (name.StartsWith("Cell_", StringComparison.Ordinal) || name == "ObstacleOverlay")
+            {
+                rect.localScale = Vector3.one;
+                group.alpha = 1f;
+                enabled = false;
+                return;
+            }
+
             StopAllCoroutines();
             StartCoroutine(Play());
         }
