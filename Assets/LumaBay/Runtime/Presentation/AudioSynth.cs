@@ -6,165 +6,109 @@ namespace LumaBay
     {
         private AudioSource effectsSource;
         private AudioSource musicSource;
+        private AudioSource ambienceSource;
+        private bool effectsEnabled = true;
+        private bool musicEnabled = true;
+
         private AudioClip click;
+        private AudioClip swap;
+        private AudioClip invalid;
         private AudioClip match;
+        private AudioClip cascade;
+        private AudioClip booster;
+        private AudioClip coin;
+        private AudioClip star;
         private AudioClip win;
-        private AudioClip error;
-        private AudioClip ambience;
-        private bool enabledAudio = true;
+        private AudioClip lose;
+        private AudioClip restore;
 
         public bool Enabled
         {
-            get => enabledAudio;
+            get => effectsEnabled;
+            set => effectsEnabled = value;
+        }
+
+        public bool MusicEnabled
+        {
+            get => musicEnabled;
             set
             {
-                enabledAudio = value;
-                if (musicSource != null)
-                {
-                    if (enabledAudio && !musicSource.isPlaying) musicSource.Play();
-                    if (!enabledAudio && musicSource.isPlaying) musicSource.Pause();
-                }
+                musicEnabled = value;
+                ApplyMusicState();
             }
         }
 
         private void Awake()
         {
-            effectsSource = gameObject.AddComponent<AudioSource>();
-            effectsSource.playOnAwake = false;
-            effectsSource.spatialBlend = 0f;
-            effectsSource.volume = 0.90f;
+            effectsSource = CreateSource("Effects", false, 0.86f);
+            musicSource = CreateSource("Music", true, 0.22f);
+            ambienceSource = CreateSource("Coastal Ambience", true, 0.13f);
 
-            musicSource = gameObject.AddComponent<AudioSource>();
-            musicSource.playOnAwake = false;
-            musicSource.loop = true;
-            musicSource.spatialBlend = 0f;
-            musicSource.volume = 0.18f;
+            click = LumaBayArtPack.Audio("ui_click");
+            swap = LumaBayArtPack.Audio("swap");
+            invalid = LumaBayArtPack.Audio("invalid");
+            match = LumaBayArtPack.Audio("match");
+            cascade = LumaBayArtPack.Audio("cascade");
+            booster = LumaBayArtPack.Audio("booster");
+            coin = LumaBayArtPack.Audio("coin");
+            star = LumaBayArtPack.Audio("star");
+            win = LumaBayArtPack.Audio("win");
+            lose = LumaBayArtPack.Audio("lose");
+            restore = LumaBayArtPack.Audio("restore");
 
-            click = CreateLayeredTone("click", 520f, 940f, 0.065f, 0.13f);
-            match = CreateSparkle("match", 700f, 0.15f, 0.17f);
-            win = CreateChord("win", new[] { 523.25f, 659.25f, 783.99f, 1046.50f }, 0.58f, 0.15f);
-            error = CreateTone("error", 180f, 0.14f, 0.11f, 0.76f);
-            ambience = CreateAmbience("coastal_ambience", 12f);
-            musicSource.clip = ambience;
-            if (enabledAudio) musicSource.Play();
+            musicSource.clip = LumaBayArtPack.Audio("music");
+            ambienceSource.clip = LumaBayArtPack.Audio("ambience");
+            ApplyMusicState();
         }
 
-        public void PlayClick() => Play(click);
-        public void PlayMatch() => Play(match);
-        public void PlayWin() => Play(win);
-        public void PlayError() => Play(error);
+        public void PlayClick() => Play(click, 0.88f);
+        public void PlaySwap() => Play(swap, 0.78f);
+        public void PlayMatch() => Play(match, 0.90f);
+        public void PlayCascade() => Play(cascade, 0.92f);
+        public void PlayBooster() => Play(booster, 0.94f);
+        public void PlayCoin() => Play(coin, 0.88f);
+        public void PlayStar() => Play(star, 0.92f);
+        public void PlayWin() => Play(win, 0.96f);
+        public void PlayLose() => Play(lose, 0.90f);
+        public void PlayRestore() => Play(restore, 1f);
+        public void PlayError() => Play(invalid, 0.82f);
 
-        private void Play(AudioClip clip)
+        private AudioSource CreateSource(string sourceName, bool loop, float volume)
         {
-            if (enabledAudio && clip != null) effectsSource.PlayOneShot(clip);
+            AudioSource source = gameObject.AddComponent<AudioSource>();
+            source.name = sourceName;
+            source.playOnAwake = false;
+            source.loop = loop;
+            source.spatialBlend = 0f;
+            source.volume = volume;
+            source.ignoreListenerPause = true;
+            return source;
         }
 
-        private static AudioClip CreateLayeredTone(string name, float lowFrequency, float highFrequency, float duration, float volume)
+        private void ApplyMusicState()
         {
-            const int sampleRate = 44100;
-            int count = Mathf.CeilToInt(sampleRate * duration);
-            float[] samples = new float[count];
-            for (int i = 0; i < count; i++)
+            if (musicSource == null || ambienceSource == null) return;
+            SetLoopState(musicSource, musicEnabled);
+            SetLoopState(ambienceSource, musicEnabled);
+        }
+
+        private static void SetLoopState(AudioSource source, bool shouldPlay)
+        {
+            if (source == null || source.clip == null) return;
+            if (shouldPlay)
             {
-                float t = i / (float)Mathf.Max(1, count - 1);
-                float envelope = Mathf.Sin(Mathf.PI * t) * (1f - t * 0.55f);
-                float low = Mathf.Sin(2f * Mathf.PI * lowFrequency * i / sampleRate);
-                float high = Mathf.Sin(2f * Mathf.PI * highFrequency * i / sampleRate + t * 2.1f);
-                samples[i] = (low * 0.64f + high * 0.36f) * envelope * volume;
+                if (!source.isPlaying) source.Play();
             }
-            AudioClip clip = AudioClip.Create(name, count, 1, sampleRate, false);
-            clip.SetData(samples, 0);
-            return clip;
+            else if (source.isPlaying)
+            {
+                source.Pause();
+            }
         }
 
-        private static AudioClip CreateSparkle(string name, float baseFrequency, float duration, float volume)
+        private void Play(AudioClip clip, float volume)
         {
-            const int sampleRate = 44100;
-            int count = Mathf.CeilToInt(sampleRate * duration);
-            float[] samples = new float[count];
-            double phase = 0d;
-            for (int i = 0; i < count; i++)
-            {
-                float t = i / (float)Mathf.Max(1, count - 1);
-                float frequency = baseFrequency * Mathf.Lerp(0.86f, 1.92f, t);
-                phase += 2d * Mathf.PI * frequency / sampleRate;
-                float envelope = Mathf.Pow(Mathf.Sin(Mathf.PI * t), 0.75f) * (1f - t * 0.38f);
-                float overtone = Mathf.Sin((float)phase * 2.02f) * 0.22f;
-                samples[i] = (Mathf.Sin((float)phase) + overtone) * envelope * volume;
-            }
-            AudioClip clip = AudioClip.Create(name, count, 1, sampleRate, false);
-            clip.SetData(samples, 0);
-            return clip;
-        }
-
-        private static AudioClip CreateTone(string name, float frequency, float duration, float volume, float endMultiplier = 1f)
-        {
-            const int sampleRate = 44100;
-            int count = Mathf.CeilToInt(sampleRate * duration);
-            float[] samples = new float[count];
-            double phase = 0d;
-            for (int i = 0; i < count; i++)
-            {
-                float t = i / (float)Mathf.Max(1, count - 1);
-                float envelope = Mathf.Sin(Mathf.PI * t) * (1f - t * 0.35f);
-                float currentFrequency = Mathf.Lerp(frequency, frequency * endMultiplier, t);
-                phase += 2d * Mathf.PI * currentFrequency / sampleRate;
-                samples[i] = Mathf.Sin((float)phase) * envelope * volume;
-            }
-            AudioClip clip = AudioClip.Create(name, count, 1, sampleRate, false);
-            clip.SetData(samples, 0);
-            return clip;
-        }
-
-        private static AudioClip CreateChord(string name, float[] frequencies, float duration, float volume)
-        {
-            const int sampleRate = 44100;
-            int count = Mathf.CeilToInt(sampleRate * duration);
-            float[] samples = new float[count];
-            for (int i = 0; i < count; i++)
-            {
-                float t = i / (float)Mathf.Max(1, count - 1);
-                float envelope = Mathf.Sin(Mathf.PI * t) * (1f - t * 0.25f);
-                float value = 0f;
-                foreach (float frequency in frequencies)
-                {
-                    value += Mathf.Sin(2f * Mathf.PI * frequency * i / sampleRate);
-                }
-                samples[i] = value / frequencies.Length * envelope * volume;
-            }
-            AudioClip clip = AudioClip.Create(name, count, 1, sampleRate, false);
-            clip.SetData(samples, 0);
-            return clip;
-        }
-
-        private static AudioClip CreateAmbience(string name, float duration)
-        {
-            const int sampleRate = 22050;
-            int count = Mathf.CeilToInt(sampleRate * duration);
-            float[] samples = new float[count];
-            System.Random random = new System.Random(8421);
-            float filteredNoise = 0f;
-
-            for (int i = 0; i < count; i++)
-            {
-                float t = i / (float)sampleRate;
-                float loopPhase = i / (float)count;
-                float fade = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(loopPhase * 16f)) *
-                             Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((1f - loopPhase) * 16f));
-
-                float rawNoise = (float)random.NextDouble() * 2f - 1f;
-                filteredNoise = Mathf.Lerp(filteredNoise, rawNoise, 0.025f);
-                float wave = filteredNoise * (0.32f + 0.12f * Mathf.Sin(t * 0.54f));
-                float lowPad = Mathf.Sin(2f * Mathf.PI * 110f * t) * 0.08f +
-                               Mathf.Sin(2f * Mathf.PI * 164.81f * t) * 0.045f +
-                               Mathf.Sin(2f * Mathf.PI * 220f * t) * 0.025f;
-                float tide = Mathf.Sin(t * 0.42f) * 0.045f;
-                samples[i] = (wave * 0.12f + lowPad + tide) * fade;
-            }
-
-            AudioClip clip = AudioClip.Create(name, count, 1, sampleRate, false);
-            clip.SetData(samples, 0);
-            return clip;
+            if (!effectsEnabled || clip == null || effectsSource == null) return;
+            effectsSource.PlayOneShot(clip, Mathf.Clamp01(volume));
         }
     }
 }
