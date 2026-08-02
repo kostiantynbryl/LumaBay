@@ -36,29 +36,40 @@ namespace LumaBay
             if (layout != null)
             {
                 layout.childForceExpandWidth = false;
-                layout.spacing = 8f;
+                layout.childForceExpandHeight = true;
+                layout.spacing = 7f;
             }
 
-            Image targetIcon = CreateImage(goals, "TargetGoalIcon", ProceduralArt.Piece(currentLevel.TargetPiece), Color.white);
+            Image targetIcon = CreateImage(goals, "TargetGoalIcon",
+                LumaBayArtPack.Piece(currentLevel.TargetPiece) ?? ProceduralArt.Piece(currentLevel.TargetPiece), Color.white);
             targetIcon.raycastTarget = false;
-            SetLayout(targetIcon.rectTransform, 64f, 64f);
-            targetIcon.transform.SetSiblingIndex(1);
+            SetLayout(targetIcon.rectTransform, 62f, 62f);
+            targetIcon.transform.SetSiblingIndex(0);
 
             if (collectGoalLabel != null)
             {
                 SetLayout(collectGoalLabel.rectTransform, -1f, 1f);
+                collectGoalLabel.transform.SetSiblingIndex(1);
             }
 
-            if (currentLevel.FogCount > 0 && fogGoalLabel != null)
-            {
-                RectTransform fogMedallion = CreatePanel(goals, "FogGoalIcon", new Color(0.19f, 0.50f, 0.65f, 0.72f));
-                SetLayout(fogMedallion, 58f, 58f);
-                Text fogIcon = CreateText(fogMedallion, "≈", 34, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
-                Stretch(fogIcon.rectTransform, 4f);
-                fogIcon.raycastTarget = false;
-                fogMedallion.SetSiblingIndex(Mathf.Max(1, fogGoalLabel.transform.GetSiblingIndex()));
-                SetLayout(fogGoalLabel.rectTransform, -1f, 1f);
-            }
+            if (currentLevel.FogCount <= 0 || fogGoalLabel == null) return;
+
+            RectTransform fogMedallion = CreateRect(goals, "FogGoalIcon");
+            Image fogBackground = fogMedallion.gameObject.AddComponent<Image>();
+            fogBackground.sprite = LumaBayArtPack.GoalChip ??
+                                   ProceduralArt.Rounded("fog_goal", new Color(0.19f, 0.50f, 0.65f, 0.72f), 15);
+            fogBackground.type = Image.Type.Sliced;
+            fogBackground.color = new Color(0.74f, 0.94f, 1f, 0.88f);
+            SetLayout(fogMedallion, 54f, 54f);
+
+            Text fogIcon = CreateText(fogMedallion, "≈", 31, TextAnchor.MiddleCenter,
+                new Color(0.08f, 0.26f, 0.38f), FontStyle.Bold);
+            Stretch(fogIcon.rectTransform, 3f);
+            fogIcon.raycastTarget = false;
+            fogMedallion.SetSiblingIndex(2);
+
+            SetLayout(fogGoalLabel.rectTransform, -1f, 1f);
+            fogGoalLabel.transform.SetSiblingIndex(3);
         }
     }
 }
