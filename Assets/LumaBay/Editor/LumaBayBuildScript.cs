@@ -8,7 +8,7 @@ namespace LumaBay.Editor
 {
     public static class LumaBayBuildScript
     {
-        private const string OutputPath = "Builds/Android/LumaBay-0.1.0-alpha.apk";
+        private const string OutputPath = "Builds/Android/LumaBay-0.1.1-alpha.apk";
 
         [MenuItem("Luma Bay/Build Android Alpha", priority = 20)]
         public static void BuildAndroid()
