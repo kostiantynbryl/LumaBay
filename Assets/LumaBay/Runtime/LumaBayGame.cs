@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,7 +8,6 @@ namespace LumaBay
     public sealed partial class LumaBayGame : MonoBehaviour
     {
         private const string Version = "0.1.1-alpha";
-        private static readonly string[] PieceSymbols = { "S", "A", "L", "C", "D", "F" };
 
         private Canvas canvas;
         private RectTransform safeRoot;
@@ -113,6 +111,11 @@ namespace LumaBay
 
             Image background = CreateImage(canvasObject.transform, "Background", ProceduralArt.Background(), Color.white);
             Stretch(background.rectTransform);
+            background.raycastTarget = false;
+
+            RectTransform ambientLayer = CreateRect(canvasObject.transform, "AmbientLayer");
+            Stretch(ambientLayer);
+            ambientLayer.gameObject.AddComponent<UiAmbientParticles>();
 
             GameObject safeObject = new GameObject("SafeArea", typeof(RectTransform), typeof(SafeAreaFitter));
             safeObject.transform.SetParent(canvasObject.transform, false);
@@ -214,7 +217,7 @@ namespace LumaBay
 
             Camera runtimeCamera = cameraObject.GetComponent<Camera>();
             runtimeCamera.clearFlags = CameraClearFlags.SolidColor;
-            runtimeCamera.backgroundColor = new Color(0.015f, 0.055f, 0.09f, 1f);
+            runtimeCamera.backgroundColor = NauticalTheme.Midnight;
             runtimeCamera.orthographic = true;
             runtimeCamera.orthographicSize = 5f;
             runtimeCamera.cullingMask = 0;
