@@ -106,6 +106,22 @@ def check_gameplay_features() -> None:
         fail("board match sparkle effect is incomplete")
 
 
+def check_unity_lifecycle() -> None:
+    sources = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in ROOT.glob("Assets/LumaBay/Runtime/LumaBayGame*.cs")
+    )
+    update_count = len(re.findall(r"\bprivate\s+void\s+Update\s*\(\s*\)", sources))
+    late_update_count = len(re.findall(r"\bprivate\s+void\s+LateUpdate\s*\(\s*\)", sources))
+    if update_count != 1:
+        fail(f"LumaBayGame must define exactly one Update method, found {update_count}")
+    if late_update_count != 0:
+        fail(f"LumaBayGame must not define LateUpdate methods, found {late_update_count}")
+    for helper in ("RefreshGoalPresentationIfNeeded", "RefreshBoardPresentationIfNeeded"):
+        if helper not in sources:
+            fail(f"central lifecycle helper missing: {helper}")
+
+
 def check_csharp_balance() -> None:
     for path in ROOT.glob("Assets/**/*.cs"):
         text = path.read_text(encoding="utf-8")
@@ -123,6 +139,7 @@ def main() -> None:
     check_version()
     check_mobile_configuration()
     check_gameplay_features()
+    check_unity_lifecycle()
     check_csharp_balance()
     print("Luma Bay 0.1.1 static validation passed.")
 
