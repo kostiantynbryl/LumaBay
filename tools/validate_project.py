@@ -16,6 +16,7 @@ REQUIRED = [
     "Assets/LumaBay/Runtime/LumaBayGame.Gameplay.cs",
     "Assets/LumaBay/Runtime/LumaBayGame.Screens.cs",
     "Assets/LumaBay/Runtime/LumaBayGame.UI.cs",
+    "Assets/LumaBay/Runtime/LumaBayGame.Goals.cs",
     "Assets/LumaBay/Runtime/LumaBayGame.Obstacles.cs",
     "Assets/LumaBay/Runtime/Model/Match3Board.cs",
     "Assets/LumaBay/Runtime/Model/BoardBoosters.cs",
@@ -23,6 +24,7 @@ REQUIRED = [
     "Assets/LumaBay/Runtime/Presentation/ProceduralArt.cs",
     "Assets/LumaBay/Runtime/Presentation/CoastalBackdropArt.cs",
     "Assets/LumaBay/Runtime/Presentation/UiMotion.cs",
+    "Assets/LumaBay/Runtime/Presentation/UiBurstParticle.cs",
     "Assets/LumaBay/Runtime/Presentation/PieceDropMotion.cs",
     "Assets/LumaBay/Runtime/Services/SaveService.cs",
     "Assets/LumaBay/Editor/LumaBayProjectBootstrap.cs",
@@ -86,6 +88,8 @@ def check_gameplay_features() -> None:
     gameplay = (ROOT / "Assets/LumaBay/Runtime/LumaBayGame.Gameplay.cs").read_text(encoding="utf-8")
     board = (ROOT / "Assets/LumaBay/Runtime/Model/Match3Board.cs").read_text(encoding="utf-8")
     localization = (ROOT / "Assets/LumaBay/Runtime/Services/Localization.cs").read_text(encoding="utf-8")
+    goals = (ROOT / "Assets/LumaBay/Runtime/LumaBayGame.Goals.cs").read_text(encoding="utf-8")
+    obstacles = (ROOT / "Assets/LumaBay/Runtime/LumaBayGame.Obstacles.cs").read_text(encoding="utf-8")
 
     for obstacle in ("Crate", "Ice", "Net"):
         if obstacle not in game_types or obstacle not in board:
@@ -96,6 +100,10 @@ def check_gameplay_features() -> None:
     for key in ("tutorial_swipe", "tutorial_boosters", "booster_lightning", "booster_harpoon"):
         if key not in localization:
             fail(f"localization key missing: {key}")
+    if "TargetGoalIcon" not in goals or "FogGoalIcon" not in goals:
+        fail("visual goal icons are incomplete")
+    if "SpawnBoardBurst" not in obstacles or "UiBurstParticle" not in obstacles:
+        fail("board match sparkle effect is incomplete")
 
 
 def check_csharp_balance() -> None:
