@@ -1,0 +1,42 @@
+name: Build Android Alpha
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Unity Android development APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-LumaBay-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-LumaBay-Android-
+
+      - name: Build APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 6000.3.18f1
+          targetPlatform: Android
+          buildMethod: LumaBay.Editor.LumaBayBuildScript.BuildAndroid
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LumaBay-Android-Alpha
+          path: Builds/Android/*.apk
+          if-no-files-found: error
