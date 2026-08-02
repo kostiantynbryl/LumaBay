@@ -27,7 +27,8 @@ namespace LumaBay
 
         public bool LighthouseComplete => LighthouseTaskCatalog.IsComplete(LighthouseTaskIndex);
         public float LighthouseProgress01 => LighthouseTaskCatalog.Progress01(LighthouseTaskIndex);
-        public int LighthouseVisualState => LighthouseTaskCatalog.VisualState(LighthouseTaskIndex);
+        public int LighthouseVisualState => Mathf.Clamp(
+            Mathf.RoundToInt(LighthouseProgress01 * 31f), 0, 31);
 
         public void EnsureLevelCapacity(int count)
         {
