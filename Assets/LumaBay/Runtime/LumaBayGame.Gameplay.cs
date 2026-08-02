@@ -18,6 +18,7 @@ namespace LumaBay
             boardBusy = false;
             levelFinished = false;
             BuildGameplayScreen();
+            ShowTutorialIfNeeded();
         }
 
         private void BuildGameplayScreen()
@@ -99,14 +100,34 @@ namespace LumaBay
             footerLayout.childForceExpandWidth = true;
             footerLayout.childForceExpandHeight = true;
 
-            CreateBoosterCard(footer, "ϟ", "Lightning", 200, UseLightningBolt, new Color(0.20f, 0.50f, 1f));
-            CreateBoosterCard(footer, "⚓", "Anchor", 300, UseAnchorBomb, NauticalTheme.Purple);
-            CreateBoosterCard(footer, "↻", "Shuffle", 50, BuyShuffle, NauticalTheme.OceanBright);
-            CreateBoosterCard(footer, "+5", "Extra time", 100, BuyExtraMoves, new Color(0.20f, 0.68f, 0.35f));
-            CreateBoosterCard(footer, "✦", "Harpoon", 250, UseMagicHarpoon, new Color(0.82f, 0.18f, 0.18f));
+            CreateBoosterCard(footer, "ϟ", Localization.T("booster_lightning"), 200, UseLightningBolt, new Color(0.20f, 0.50f, 1f));
+            CreateBoosterCard(footer, "⚓", Localization.T("booster_anchor"), 300, UseAnchorBomb, NauticalTheme.Purple);
+            CreateBoosterCard(footer, "↻", Localization.T("booster_shuffle"), 50, BuyShuffle, NauticalTheme.OceanBright);
+            CreateBoosterCard(footer, "+5", Localization.T("booster_time"), 100, BuyExtraMoves, new Color(0.20f, 0.68f, 0.35f));
+            CreateBoosterCard(footer, "✦", Localization.T("booster_harpoon"), 250, UseMagicHarpoon, new Color(0.82f, 0.18f, 0.18f));
 
             RefreshBoard();
             UpdateGameplayLabels();
+        }
+
+        private void ShowTutorialIfNeeded()
+        {
+            if (currentLevel.Id == 1 && !save.TutorialSwipeSeen)
+            {
+                save.TutorialSwipeSeen = true;
+                SaveService.Save(save);
+                ShowModal(Localization.T("tutorial_title"), Localization.T("tutorial_swipe"),
+                    Localization.T("continue"), () => { });
+                return;
+            }
+
+            if (currentLevel.Id >= 3 && !save.TutorialBoosterSeen)
+            {
+                save.TutorialBoosterSeen = true;
+                SaveService.Save(save);
+                ShowModal(Localization.T("tutorial_title"), Localization.T("tutorial_boosters"),
+                    Localization.T("continue"), () => { });
+            }
         }
 
         private void AttemptMove(Vector2Int a, Vector2Int b)
@@ -187,7 +208,7 @@ namespace LumaBay
             if (save.VibrationEnabled) Handheld.Vibrate();
 
             string starLine = new string('★', stars) + new string('☆', 3 - stars);
-            string body = $"<size=54><color=#FFD56A>{starLine}</color></size>\n\n{Localization.T("restoration")}\n<size=34><color=#FFD56A>+{reward} ◆</color></size>";
+            string body = $"<size=54><color=#FFD56A>{starLine}</color></size>\n\n{Localization.T("win_subtitle")}\n<size=34><color=#FFD56A>+{reward} ◆</color></size>";
             Action primary = currentLevel.Id < LevelCatalog.Count
                 ? (Action)(() => StartLevel(currentLevel.Id + 1))
                 : ShowMap;
@@ -234,7 +255,7 @@ namespace LumaBay
             audioSynth.PlayMatch();
             RefreshBoard();
             UpdateGameplayLabels();
-            ShowToast("Lightning Bolt");
+            ShowToast(Localization.T("booster_lightning"));
         }
 
         private void UseAnchorBomb()
@@ -244,7 +265,7 @@ namespace LumaBay
             audioSynth.PlayMatch();
             RefreshBoard();
             UpdateGameplayLabels();
-            ShowToast("Anchor Bomb");
+            ShowToast(Localization.T("booster_anchor"));
         }
 
         private void BuyShuffle()
@@ -255,6 +276,7 @@ namespace LumaBay
             audioSynth.PlayClick();
             RefreshBoard();
             UpdateGameplayLabels();
+            ShowToast(Localization.T("booster_shuffle"));
         }
 
         private void BuyExtraMoves()
@@ -264,7 +286,7 @@ namespace LumaBay
             movesRemaining += 5;
             audioSynth.PlayClick();
             UpdateGameplayLabels();
-            ShowToast("+5");
+            ShowToast(Localization.T("booster_time"));
         }
 
         private void UseMagicHarpoon()
@@ -274,7 +296,7 @@ namespace LumaBay
             audioSynth.PlayWin();
             RefreshBoard();
             UpdateGameplayLabels();
-            ShowToast("Magic Harpoon");
+            ShowToast(Localization.T("booster_harpoon"));
         }
 
         private void RefreshBoard()
@@ -301,6 +323,7 @@ namespace LumaBay
                         selected ? new Color(1f, 0.78f, 0.25f, 0.22f) : new Color(0.30f, 0.75f, 1f, 0.08f));
                     Stretch(pieceGlow.rectTransform, 5f);
                     pieceGlow.raycastTarget = false;
+                    if (selected) pieceGlow.gameObject.AddComponent<SoftGlowPulse>();
 
                     Image piece = CreateImage(cellRoot, "Piece", ProceduralArt.Piece(cell.Piece), Color.white);
                     Stretch(piece.rectTransform, 5f);
