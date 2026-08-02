@@ -6,6 +6,26 @@ namespace LumaBay
 {
     public sealed partial class LumaBayGame
     {
+        private int boardPresentationSignature = int.MinValue;
+
+        private void LateUpdate()
+        {
+            if (boardGrid == null || board == null)
+            {
+                boardPresentationSignature = int.MinValue;
+                return;
+            }
+
+            int childCount = boardGrid.childCount;
+            int firstChildId = childCount > 0 ? boardGrid.GetChild(0).GetInstanceID() : 0;
+            int signature = boardGrid.GetInstanceID() ^ (childCount * 397) ^ firstChildId;
+            if (signature == boardPresentationSignature) return;
+
+            boardPresentationSignature = signature;
+            RefreshObstaclePresentation();
+            InstallPieceMotion();
+        }
+
         internal void RefreshObstaclePresentation()
         {
             if (boardGrid == null || board == null) return;
@@ -33,6 +53,19 @@ namespace LumaBay
                         BuildNetOverlay(cellTransform);
                         break;
                 }
+            }
+        }
+
+        private void InstallPieceMotion()
+        {
+            if (boardGrid == null) return;
+            for (int i = 0; i < boardGrid.childCount; i++)
+            {
+                Transform cell = boardGrid.GetChild(i);
+                if (!cell.name.StartsWith("Cell_", StringComparison.Ordinal)) continue;
+                Transform piece = cell.Find("Piece");
+                if (piece == null || piece.GetComponent<PieceDropMotion>() != null) continue;
+                piece.gameObject.AddComponent<PieceDropMotion>();
             }
         }
 
@@ -116,26 +149,6 @@ namespace LumaBay
             rope.rectTransform.offsetMax = Vector2.zero;
             rope.rectTransform.localRotation = Quaternion.Euler(0f, 0f, angle);
             rope.raycastTarget = false;
-        }
-    }
-
-    public static class ObstaclePresentationInstaller
-    {
-        private static int lastFrame = -1;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Register()
-        {
-            Canvas.willRenderCanvases -= Refresh;
-            Canvas.willRenderCanvases += Refresh;
-        }
-
-        private static void Refresh()
-        {
-            if (lastFrame == Time.frameCount) return;
-            lastFrame = Time.frameCount;
-            LumaBayGame[] games = UnityEngine.Object.FindObjectsByType<LumaBayGame>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            foreach (LumaBayGame game in games) game.RefreshObstaclePresentation();
         }
     }
 }
