@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace LumaBay
 {
@@ -27,7 +26,7 @@ namespace LumaBay
             rect.anchoredPosition = targetPosition + new Vector2(0f, 44f);
             rect.localScale = targetScale * 0.72f;
 
-            float duration = 0.24f;
+            const float duration = 0.24f;
             float elapsed = 0f;
             while (elapsed < duration)
             {
@@ -42,32 +41,6 @@ namespace LumaBay
 
             rect.anchoredPosition = targetPosition;
             rect.localScale = targetScale;
-        }
-    }
-
-    public static class PieceDropMotionInstaller
-    {
-        private static int lastFrame = -1;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Register()
-        {
-            Canvas.willRenderCanvases -= Install;
-            Canvas.willRenderCanvases += Install;
-        }
-
-        private static void Install()
-        {
-            if (lastFrame == Time.frameCount) return;
-            lastFrame = Time.frameCount;
-
-            Image[] images = Object.FindObjectsByType<Image>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            foreach (Image image in images)
-            {
-                if (image.name != "Piece") continue;
-                if (image.GetComponent<PieceDropMotion>() != null) continue;
-                image.gameObject.AddComponent<PieceDropMotion>();
-            }
         }
     }
 }
