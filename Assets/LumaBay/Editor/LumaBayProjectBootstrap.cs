@@ -11,7 +11,7 @@ namespace LumaBay.Editor
     public static class LumaBayProjectBootstrap
     {
         public const string ScenePath = "Assets/LumaBay/Scenes/LumaBayMain.unity";
-        private const string SetupVersionKey = "LumaBay.ProjectSetup.0.1.1";
+        private const string SetupVersionKey = "LumaBay.ProjectSetup.0.1.2";
 
         static LumaBayProjectBootstrap()
         {
@@ -25,11 +25,13 @@ namespace LumaBay.Editor
             EnsureScene();
             ConfigurePlayer();
             LumaBayBrandingGenerator.EnsureBranding();
+            LumaBayArtPackGenerator.GenerateAll();
+            LumaBayAudioPackGenerator.GenerateAll();
             ConfigureBuildSettings();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             EditorPrefs.SetBool(SetupVersionKey, true);
-            Debug.Log("Luma Bay project setup completed.");
+            Debug.Log("Luma Bay 0.1.2 project setup completed.");
         }
 
         private static void EnsureProjectOnce()
@@ -56,7 +58,7 @@ namespace LumaBay.Editor
         {
             PlayerSettings.companyName = "Norvexa Games";
             PlayerSettings.productName = "Luma Bay: Match & Restore";
-            PlayerSettings.bundleVersion = "0.1.1-alpha";
+            PlayerSettings.bundleVersion = "0.1.2-alpha";
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = false;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
@@ -64,7 +66,7 @@ namespace LumaBay.Editor
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.runInBackground = false;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.norvexa.lumabay");
-            PlayerSettings.Android.bundleVersionCode = 2;
+            PlayerSettings.Android.bundleVersionCode = 3;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
