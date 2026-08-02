@@ -5,6 +5,7 @@ namespace LumaBay
 {
     public static class LevelCatalog
     {
+        private const int CampaignLevelCount = 60;
         private static readonly List<LevelDefinition> Levels = BuildLevels();
 
         public static int Count => Levels.Count;
@@ -31,44 +32,66 @@ namespace LumaBay
 
         private static List<LevelDefinition> BuildLevels()
         {
-            var levels = new List<LevelDefinition>();
-            for (int id = 1; id <= 30; id++)
+            var levels = new List<LevelDefinition>(CampaignLevelCount);
+            for (int id = 1; id <= CampaignLevelCount; id++)
             {
                 int chapter = (id - 1) / 10;
                 int withinChapter = (id - 1) % 10;
 
-                int fog = id < 4 ? 0 : Math.Min(18, 3 + (id - 4) / 3 + chapter * 2);
-                int crates = id < 6 ? 0 : Math.Min(14, 2 + (id - 6) / 3 + chapter * 2);
-                int ice = id < 11 ? 0 : Math.Min(14, 2 + (id - 11) / 3 + chapter * 2);
-                int nets = id < 17 ? 0 : Math.Min(9, 1 + (id - 17) / 4 + chapter);
+                // Mechanics are introduced one at a time, then combined.
+                int fog = id < 4 ? 0 : Math.Min(22, 3 + (id - 4) / 4 + chapter);
+                int crates = id < 7 ? 0 : Math.Min(18, 2 + (id - 7) / 4 + chapter);
+                int ice = id < 13 ? 0 : Math.Min(18, 2 + (id - 13) / 4 + chapter);
+                int nets = id < 20 ? 0 : Math.Min(12, 1 + (id - 20) / 5 + chapter / 2);
 
-                int moves = 27 - chapter - withinChapter / 4;
-                int target = 10 + id + chapter;
+                int moves = 30 - Math.Min(7, chapter) - withinChapter / 5;
+                int target = 9 + id / 2 + chapter * 2;
 
-                if (id <= 3)
+                // Gentle onboarding and recovery beats after chapter finales.
+                if (id <= 5)
                 {
-                    moves += 3;
-                    target -= 2;
+                    moves += 4;
+                    target = Math.Max(7, target - 3);
                 }
-                if (id == 10 || id == 20 || id == 30)
+                if (withinChapter == 0 && id > 1)
                 {
                     moves += 2;
-                    target += 5;
-                    fog += 2;
-                    crates += 2;
+                    target = Math.Max(8, target - 2);
+                }
+
+                // Chapter finales are memorable but not pure difficulty walls.
+                if (id % 10 == 0)
+                {
+                    moves += 3;
+                    target += 4;
+                    fog += id >= 10 ? 2 : 0;
+                    crates += id >= 20 ? 2 : 0;
+                    ice += id >= 30 ? 2 : 0;
+                }
+
+                // Avoid overcrowding the 8x8 board.
+                int obstacleBudget = 30;
+                int total = fog + crates + ice + nets;
+                if (total > obstacleBudget)
+                {
+                    float scale = obstacleBudget / (float)total;
+                    fog = Math.Max(0, (int)Math.Round(fog * scale));
+                    crates = Math.Max(0, (int)Math.Round(crates * scale));
+                    ice = Math.Max(0, (int)Math.Round(ice * scale));
+                    nets = Math.Max(0, (int)Math.Round(nets * scale));
                 }
 
                 levels.Add(new LevelDefinition
                 {
                     Id = id,
                     Moves = Math.Max(18, moves),
-                    TargetPiece = (PieceKind)((id - 1) % 6),
-                    TargetCount = Math.Max(8, target),
+                    TargetPiece = (PieceKind)((id + chapter) % 6),
+                    TargetCount = Math.Max(7, target),
                     FogCount = fog,
                     CrateCount = crates,
                     IceCount = ice,
                     NetCount = nets,
-                    Seed = 4100 + id * 97
+                    Seed = 9107 + id * 173
                 });
             }
 
