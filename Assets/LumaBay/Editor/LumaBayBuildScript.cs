@@ -15,7 +15,7 @@ namespace LumaBay.Editor
         {
             LumaBayProjectBootstrap.EnsureProject();
             Directory.CreateDirectory(Path.GetDirectoryName(OutputPath) ?? "Builds/Android");
-            EditorUserBuildSettings.development = true;
+            EditorUserBuildSettings.development = false;
             EditorUserBuildSettings.connectProfiler = false;
             EditorUserBuildSettings.buildAppBundle = false;
 
@@ -24,7 +24,7 @@ namespace LumaBay.Editor
                 scenes = new[] { LumaBayProjectBootstrap.ScenePath },
                 locationPathName = OutputPath,
                 target = BuildTarget.Android,
-                options = BuildOptions.Development
+                options = BuildOptions.None
             };
 
             BuildReport report = BuildPipeline.BuildPlayer(options);
