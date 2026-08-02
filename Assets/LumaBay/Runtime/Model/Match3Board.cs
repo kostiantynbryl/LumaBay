@@ -31,6 +31,7 @@ namespace LumaBay
 
             GenerateBoard();
             PlaceFog(level.FogCount);
+            PlaceObstacles(level.CrateCount, level.IceCount, level.NetCount, level.Id);
         }
 
         public BoardCell GetCell(int x, int y)
@@ -47,6 +48,11 @@ namespace LumaBay
         {
             result = new MoveResult();
             if (!IsInside(a.x, a.y) || !IsInside(b.x, b.y) || Manhattan(a, b) != 1)
+            {
+                return false;
+            }
+
+            if (cells[a.x, a.y].SwapLocked || cells[b.x, b.y].SwapLocked)
             {
                 return false;
             }
@@ -164,6 +170,37 @@ namespace LumaBay
 
         private void PlaceFog(int count)
         {
+            List<Vector2Int> positions = ShuffledPositions();
+            int safeCount = Math.Min(count, positions.Count);
+            for (int i = 0; i < safeCount; i++)
+            {
+                cells[positions[i].x, positions[i].y].FogLayers = 1;
+            }
+        }
+
+        private void PlaceObstacles(int crateCount, int iceCount, int netCount, int levelId)
+        {
+            List<Vector2Int> positions = ShuffledPositions();
+            int index = 0;
+            PlaceObstacleGroup(positions, ref index, crateCount, ObstacleKind.Crate, levelId >= 21 ? 2 : 1);
+            PlaceObstacleGroup(positions, ref index, iceCount, ObstacleKind.Ice, levelId >= 24 ? 2 : 1);
+            PlaceObstacleGroup(positions, ref index, netCount, ObstacleKind.Net, 1);
+        }
+
+        private void PlaceObstacleGroup(List<Vector2Int> positions, ref int index, int count, ObstacleKind kind, int layers)
+        {
+            int remaining = Math.Min(count, positions.Count - index);
+            for (int i = 0; i < remaining; i++)
+            {
+                Vector2Int position = positions[index++];
+                BoardCell cell = cells[position.x, position.y];
+                cell.Obstacle = kind;
+                cell.ObstacleLayers = layers;
+            }
+        }
+
+        private List<Vector2Int> ShuffledPositions()
+        {
             var positions = new List<Vector2Int>();
             for (int x = 0; x < Width; x++)
             {
@@ -178,12 +215,7 @@ namespace LumaBay
                 int j = random.Next(i + 1);
                 (positions[i], positions[j]) = (positions[j], positions[i]);
             }
-
-            int safeCount = Math.Min(count, positions.Count);
-            for (int i = 0; i < safeCount; i++)
-            {
-                cells[positions[i].x, positions[i].y].FogLayers = 1;
-            }
+            return positions;
         }
 
         private void ResolveSwapSpecials(Vector2Int a, Vector2Int b, MoveResult result)
@@ -380,6 +412,17 @@ namespace LumaBay
                 BoardCell cell = cells[position.x, position.y];
                 if (cell.Piece == PieceKind.None) continue;
 
+                if (cell.Obstacle == ObstacleKind.Crate && cell.ObstacleLayers > 0)
+                {
+                    DamageObstacle(cell, result);
+                    continue;
+                }
+
+                if (cell.ObstacleLayers > 0)
+                {
+                    DamageObstacle(cell, result);
+                }
+
                 result.AddCollected(cell.Piece);
                 if (cell.FogLayers > 0)
                 {
@@ -389,6 +432,18 @@ namespace LumaBay
 
                 cell.Piece = PieceKind.None;
                 cell.Special = SpecialKind.None;
+            }
+        }
+
+        private static void DamageObstacle(BoardCell cell, MoveResult result)
+        {
+            if (cell.ObstacleLayers <= 0) return;
+            cell.ObstacleLayers--;
+            result.ClearedObstacles++;
+            if (cell.ObstacleLayers <= 0)
+            {
+                cell.ObstacleLayers = 0;
+                cell.Obstacle = ObstacleKind.None;
             }
         }
 
@@ -478,6 +533,7 @@ namespace LumaBay
 
         private bool SwapCreatesMatch(Vector2Int a, Vector2Int b)
         {
+            if (cells[a.x, a.y].SwapLocked || cells[b.x, b.y].SwapLocked) return false;
             SwapPieces(a, b);
             bool createsMatch = FindMatches().Count > 0 ||
                                 cells[a.x, a.y].Special == SpecialKind.Rainbow ||
