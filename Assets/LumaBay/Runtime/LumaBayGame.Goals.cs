@@ -7,7 +7,7 @@ namespace LumaBay
     {
         private int configuredGoalsPanelId = int.MinValue;
 
-        private void Update()
+        private void RefreshGoalPresentationIfNeeded()
         {
             if (screenRoot == null || currentLevel == null || board == null)
             {
