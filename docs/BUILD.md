@@ -10,49 +10,64 @@ Install Unity `6000.3.18f1` with:
 
 ## Prepare the project
 
-Switch to branch:
+Switch to:
 
 ```text
-develop/0.1.1-alpha
+develop/0.1.2-alpha
 ```
 
-Open the repository root in Unity Hub and wait until package import and script compilation finish. The editor bootstrap configures the Android player and generates the Luma Bay lighthouse application icon under the ignored local folder `Assets/LumaBay/Generated`.
+Open the repository root in Unity Hub. During the first clean import Unity will:
 
-The setup can be repeated manually from:
+1. compile the committed runtime and editor code;
+2. create the start scene when missing;
+3. generate the application icon;
+4. generate the premium PNG art pack;
+5. generate the original WAV audio pack;
+6. import and compress the generated assets.
+
+The first import is intentionally longer than 0.1.1 because it creates 32 lighthouse scenes, six pieces, five boosters, UI textures, ambience, music and SFX. Do not close Unity while the progress bar is active.
+
+Generated files are reproducible and ignored under:
 
 ```text
+Assets/LumaBay/Resources/
+Assets/LumaBay/Generated/
+```
+
+Manual regeneration commands:
+
+```text
+Luma Bay → Generate Premium Art Pack
+Luma Bay → Generate Game Audio Pack
+Luma Bay → Generate Branding
 Luma Bay → Setup Project
 ```
 
 ## Editor build
 
-Select:
+After the Console has no red errors, select:
 
 ```text
 Luma Bay → Build Android Alpha
 ```
 
-The build script creates the control APK at:
+Output:
 
 ```text
-Builds/Android/LumaBay-0.1.1-alpha.apk
+Builds/Android/LumaBay-0.1.2-alpha.apk
 ```
 
-The 0.1.1 control build uses:
+Configuration:
 
 - ARM64;
 - IL2CPP;
 - medium managed-code stripping;
 - portrait orientation;
 - Android 8.0 minimum;
-- non-development build options;
+- non-development build;
 - debug signing for internal testing.
 
-The `Development Build` watermark is therefore not expected in this APK.
-
 ## Command-line build
-
-Windows example:
 
 ```powershell
 & "C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe" `
@@ -62,30 +77,39 @@ Windows example:
   -logFile "Builds/unity-build.log"
 ```
 
+A command-line build should be run only after the generated Resources assets exist from one editor import.
+
 ## Install without deleting progress
 
 ```powershell
-adb install -r "Builds\Android\LumaBay-0.1.1-alpha.apk"
+adb install -r "Builds\Android\LumaBay-0.1.2-alpha.apk"
 ```
 
-The package ID remains `com.norvexa.lumabay`, and save schema migration preserves progress from the tested 0.1.0 Alpha.
+The package remains `com.norvexa.lumabay`. Save schema version 3 migrates the previous level, star, coin and lighthouse progress.
+
+## Local validation
+
+```powershell
+python tools\validate_project.py
+```
+
+Unity EditMode tests are available from:
+
+```text
+Window → General → Test Runner → EditMode
+```
 
 ## GitHub Actions
 
-The optional `Build Android Alpha` workflow uses GameCI and is manual. It requires repository secrets appropriate to the selected Unity activation method, such as:
+Workflows remain manual to avoid spending Actions minutes on every art iteration. Local Unity builds are the primary validation path because Android compilation requires a valid Unity installation and activation.
 
-- `UNITY_LICENSE`;
-- `UNITY_EMAIL`;
-- `UNITY_PASSWORD`.
+## Public release preparation
 
-Local Unity builds remain the primary control-build path so GitHub Actions minutes are not consumed for every change.
+The control APK still uses debug signing. Before Google Play distribution:
 
-## Release signing
-
-The 0.1.1 control APK still uses debug signing. Before Google Play distribution:
-
-1. create a protected upload keystore outside Git;
-2. store its values as encrypted local or CI secrets;
-3. generate an Android App Bundle;
-4. verify target API requirements;
-5. run closed testing and Play pre-launch reports.
+1. create an upload keystore outside Git;
+2. move signing values to protected secrets;
+3. build an Android App Bundle;
+4. verify target API and Data Safety requirements;
+5. run closed testing and Play pre-launch reports;
+6. profile memory, startup time and frame pacing on several Android devices.
