@@ -7,6 +7,7 @@ namespace LumaBay
     public sealed partial class LumaBayGame
     {
         private int boardPresentationSignature = int.MinValue;
+        private System.Random visualRandom = new System.Random(3187);
 
         private void LateUpdate()
         {
@@ -21,9 +22,11 @@ namespace LumaBay
             int signature = boardGrid.GetInstanceID() ^ (childCount * 397) ^ firstChildId;
             if (signature == boardPresentationSignature) return;
 
+            bool playBurst = boardPresentationSignature != int.MinValue && boardBusy;
             boardPresentationSignature = signature;
             RefreshObstaclePresentation();
             InstallPieceMotion();
+            if (playBurst) SpawnBoardBurst();
         }
 
         internal void RefreshObstaclePresentation()
@@ -66,6 +69,37 @@ namespace LumaBay
                 Transform piece = cell.Find("Piece");
                 if (piece == null || piece.GetComponent<PieceDropMotion>() != null) continue;
                 piece.gameObject.AddComponent<PieceDropMotion>();
+            }
+        }
+
+        private void SpawnBoardBurst()
+        {
+            if (boardGrid == null) return;
+            int count = 8 + Math.Min(10, Math.Max(0, currentLevel != null ? currentLevel.Id / 3 : 0));
+            for (int i = 0; i < count; i++)
+            {
+                RectTransform particle = CreateRect(boardGrid, "MatchSparkle");
+                particle.anchorMin = new Vector2(0.5f, 0.5f);
+                particle.anchorMax = new Vector2(0.5f, 0.5f);
+                particle.pivot = new Vector2(0.5f, 0.5f);
+                float angle = (float)visualRandom.NextDouble() * Mathf.PI * 2f;
+                float radius = 40f + (float)visualRandom.NextDouble() * 210f;
+                particle.anchoredPosition = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                float size = 8f + (float)visualRandom.NextDouble() * 15f;
+                particle.sizeDelta = new Vector2(size, size);
+
+                Image image = particle.gameObject.AddComponent<Image>();
+                image.sprite = ProceduralArt.Pearl("match_sparkle");
+                image.raycastTarget = false;
+                image.color = i % 3 == 0
+                    ? new Color(0.42f, 0.86f, 1f, 0.92f)
+                    : new Color(1f, 0.80f, 0.30f, 0.92f);
+
+                float speed = 75f + (float)visualRandom.NextDouble() * 125f;
+                Vector2 velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
+                UiBurstParticle burst = particle.gameObject.AddComponent<UiBurstParticle>();
+                burst.Launch(velocity, 0.42f + (float)visualRandom.NextDouble() * 0.30f,
+                    -160f + (float)visualRandom.NextDouble() * 320f);
             }
         }
 
