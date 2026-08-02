@@ -24,14 +24,25 @@ namespace LumaBay
         Rainbow = 4
     }
 
+    public enum ObstacleKind
+    {
+        None = 0,
+        Crate = 1,
+        Ice = 2,
+        Net = 3
+    }
+
     [Serializable]
     public sealed class BoardCell
     {
         public PieceKind Piece = PieceKind.None;
         public SpecialKind Special = SpecialKind.None;
+        public ObstacleKind Obstacle = ObstacleKind.None;
+        public int ObstacleLayers;
         public int FogLayers;
 
         public bool IsEmpty => Piece == PieceKind.None;
+        public bool SwapLocked => Obstacle == ObstacleKind.Net && ObstacleLayers > 0;
 
         public BoardCell Clone()
         {
@@ -39,6 +50,8 @@ namespace LumaBay
             {
                 Piece = Piece,
                 Special = Special,
+                Obstacle = Obstacle,
+                ObstacleLayers = ObstacleLayers,
                 FogLayers = FogLayers
             };
         }
@@ -56,6 +69,7 @@ namespace LumaBay
         public int Cascades;
         public int ClearedPieces;
         public int ClearedFog;
+        public int ClearedObstacles;
         public readonly Dictionary<PieceKind, int> Collected = new Dictionary<PieceKind, int>();
 
         public void AddCollected(PieceKind kind)
@@ -85,6 +99,9 @@ namespace LumaBay
         public PieceKind TargetPiece = PieceKind.Shell;
         public int TargetCount = 12;
         public int FogCount;
+        public int CrateCount;
+        public int IceCount;
+        public int NetCount;
         public int Seed = 1001;
 
         public string DifficultyLabel
