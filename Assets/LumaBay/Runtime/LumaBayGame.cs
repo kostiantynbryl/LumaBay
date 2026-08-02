@@ -96,6 +96,7 @@ namespace LumaBay
 
         private void BuildApplicationShell()
         {
+            CreateRuntimeCamera();
             font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             GameObject canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -129,6 +130,31 @@ namespace LumaBay
                 GameObject eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
                 eventSystem.transform.SetParent(transform, false);
             }
+        }
+
+        private void CreateRuntimeCamera()
+        {
+            Camera existingCamera = Camera.main;
+            if (existingCamera != null)
+            {
+                if (existingCamera.GetComponent<AudioListener>() == null)
+                    existingCamera.gameObject.AddComponent<AudioListener>();
+                return;
+            }
+
+            GameObject cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
+            cameraObject.tag = "MainCamera";
+            cameraObject.transform.SetParent(transform, false);
+            cameraObject.transform.localPosition = new Vector3(0f, 0f, -10f);
+
+            Camera runtimeCamera = cameraObject.GetComponent<Camera>();
+            runtimeCamera.clearFlags = CameraClearFlags.SolidColor;
+            runtimeCamera.backgroundColor = new Color(0.015f, 0.055f, 0.09f, 1f);
+            runtimeCamera.orthographic = true;
+            runtimeCamera.orthographicSize = 5f;
+            runtimeCamera.cullingMask = 0;
+            runtimeCamera.nearClipPlane = 0.1f;
+            runtimeCamera.farClipPlane = 100f;
         }
     }
 }
