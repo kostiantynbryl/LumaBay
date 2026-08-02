@@ -13,9 +13,21 @@ REQUIRED = [
     "Packages/manifest.json",
     "ProjectSettings/ProjectVersion.txt",
     "Assets/LumaBay/Runtime/LumaBayGame.cs",
+    "Assets/LumaBay/Runtime/LumaBayGame.Gameplay.cs",
+    "Assets/LumaBay/Runtime/LumaBayGame.Screens.cs",
+    "Assets/LumaBay/Runtime/LumaBayGame.UI.cs",
+    "Assets/LumaBay/Runtime/LumaBayGame.Obstacles.cs",
     "Assets/LumaBay/Runtime/Model/Match3Board.cs",
+    "Assets/LumaBay/Runtime/Model/BoardBoosters.cs",
+    "Assets/LumaBay/Runtime/Presentation/NauticalTheme.cs",
+    "Assets/LumaBay/Runtime/Presentation/ProceduralArt.cs",
+    "Assets/LumaBay/Runtime/Presentation/CoastalBackdropArt.cs",
+    "Assets/LumaBay/Runtime/Presentation/UiMotion.cs",
+    "Assets/LumaBay/Runtime/Presentation/PieceDropMotion.cs",
+    "Assets/LumaBay/Runtime/Services/SaveService.cs",
     "Assets/LumaBay/Editor/LumaBayProjectBootstrap.cs",
     "Assets/LumaBay/Editor/LumaBayBuildScript.cs",
+    "Assets/LumaBay/Editor/LumaBayBrandingGenerator.cs",
 ]
 
 
@@ -35,12 +47,55 @@ def check_manifest() -> None:
     dependencies = manifest.get("dependencies", {})
     if "com.unity.ugui" not in dependencies:
         fail("uGUI package is not declared")
+    if "com.unity.test-framework" not in dependencies:
+        fail("Unity Test Framework package is not declared")
 
 
 def check_version() -> None:
     text = (ROOT / "ProjectSettings/ProjectVersion.txt").read_text(encoding="utf-8")
     if "6000.3.18f1" not in text:
         fail("unexpected Unity version")
+
+    runtime = (ROOT / "Assets/LumaBay/Runtime/LumaBayGame.cs").read_text(encoding="utf-8")
+    bootstrap = (ROOT / "Assets/LumaBay/Editor/LumaBayProjectBootstrap.cs").read_text(encoding="utf-8")
+    build = (ROOT / "Assets/LumaBay/Editor/LumaBayBuildScript.cs").read_text(encoding="utf-8")
+    for name, source in (("runtime", runtime), ("bootstrap", bootstrap), ("build", build)):
+        if "0.1.1-alpha" not in source:
+            fail(f"0.1.1-alpha version missing from {name}")
+
+
+def check_mobile_configuration() -> None:
+    bootstrap = (ROOT / "Assets/LumaBay/Editor/LumaBayProjectBootstrap.cs").read_text(encoding="utf-8")
+    build = (ROOT / "Assets/LumaBay/Editor/LumaBayBuildScript.cs").read_text(encoding="utf-8")
+    required_bootstrap_tokens = [
+        "com.norvexa.lumabay",
+        "AndroidArchitecture.ARM64",
+        "ScriptingImplementation.IL2CPP",
+        "ManagedStrippingLevel.Medium",
+        "UIOrientation.Portrait",
+    ]
+    for token in required_bootstrap_tokens:
+        if token not in bootstrap:
+            fail(f"Android configuration token missing: {token}")
+    if "BuildOptions.Development" in build or "development = true" in build:
+        fail("0.1.1 control build must not be a development build")
+
+
+def check_gameplay_features() -> None:
+    game_types = (ROOT / "Assets/LumaBay/Runtime/Model/GameTypes.cs").read_text(encoding="utf-8")
+    gameplay = (ROOT / "Assets/LumaBay/Runtime/LumaBayGame.Gameplay.cs").read_text(encoding="utf-8")
+    board = (ROOT / "Assets/LumaBay/Runtime/Model/Match3Board.cs").read_text(encoding="utf-8")
+    localization = (ROOT / "Assets/LumaBay/Runtime/Services/Localization.cs").read_text(encoding="utf-8")
+
+    for obstacle in ("Crate", "Ice", "Net"):
+        if obstacle not in game_types or obstacle not in board:
+            fail(f"obstacle is not fully declared: {obstacle}")
+    for booster in ("UseLightningBolt", "UseAnchorBomb", "BuyShuffle", "BuyExtraMoves", "UseMagicHarpoon"):
+        if booster not in gameplay:
+            fail(f"booster handler missing: {booster}")
+    for key in ("tutorial_swipe", "tutorial_boosters", "booster_lightning", "booster_harpoon"):
+        if key not in localization:
+            fail(f"localization key missing: {key}")
 
 
 def check_csharp_balance() -> None:
@@ -58,8 +113,10 @@ def main() -> None:
     check_required()
     check_manifest()
     check_version()
+    check_mobile_configuration()
+    check_gameplay_features()
     check_csharp_balance()
-    print("Luma Bay static validation passed.")
+    print("Luma Bay 0.1.1 static validation passed.")
 
 
 if __name__ == "__main__":
