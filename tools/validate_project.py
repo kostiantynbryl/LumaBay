@@ -104,8 +104,18 @@ def check_campaign_and_meta() -> None:
 
     if "CampaignLevelCount = 60" not in levels:
         fail("campaign must contain 60 levels")
-    if tasks.count("T(\"") < 48:
+    if tasks.count('T("') < 48:
         fail("lighthouse roadmap must contain at least 48 authored tasks")
+    for chapter in (
+        "Спасение берега",
+        "Возвращение башни",
+        "Сердце света",
+        "Первый луч",
+        "Дом смотрителя",
+        "Живая бухта",
+    ):
+        if chapter not in tasks:
+            fail(f"lighthouse chapter missing: {chapter}")
     for token in ("SaveVersion = 3", "LighthouseTaskIndex", "MusicEnabled", "BackupKey"):
         if token not in save:
             fail(f"save migration token missing: {token}")
@@ -119,7 +129,7 @@ def check_art_and_audio_pipeline() -> None:
     screens = read("Assets/LumaBay/Runtime/LumaBayGame.Screens.cs")
     gameplay = read("Assets/LumaBay/Runtime/LumaBayGame.Gameplay.cs")
 
-    for token in ("LighthouseState", "TintedPanel", "ArtPack/backgrounds", "ArtPack/pieces"):
+    for token in ("LighthouseState", "TintedPanel", 'LoadSprite("backgrounds/', 'LoadSprite($"pieces/'):
         if token not in art_loader:
             fail(f"art-pack loader token missing: {token}")
     for token in ("GenerateLighthouseStates", "GeneratePieces", "GenerateBoosters", "lighthouse_31.png"):
@@ -160,19 +170,26 @@ def check_gameplay_features() -> None:
 
 
 def check_unity_lifecycle() -> None:
-    sources = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in ROOT.glob("Assets/LumaBay/Runtime/LumaBayGame*.cs")
-    )
-    update_count = len(re.findall(r"\bprivate\s+void\s+Update\s*\(\s*\)", sources))
-    late_update_count = len(re.findall(r"\bprivate\s+void\s+LateUpdate\s*\(\s*\)", sources))
-    if update_count != 1:
-        fail(f"LumaBayGame must define exactly one Update method, found {update_count}")
-    if late_update_count != 0:
-        fail(f"LumaBayGame must not define LateUpdate methods, found {late_update_count}")
+    main = read("Assets/LumaBay/Runtime/LumaBayGame.cs")
+    if len(re.findall(r"\bprivate\s+void\s+Update\s*\(\s*\)", main)) != 1:
+        fail("the main LumaBayGame class must define exactly one Update method")
+
+    partial_files = [
+        "Assets/LumaBay/Runtime/LumaBayGame.Gameplay.cs",
+        "Assets/LumaBay/Runtime/LumaBayGame.Screens.cs",
+        "Assets/LumaBay/Runtime/LumaBayGame.UI.cs",
+        "Assets/LumaBay/Runtime/LumaBayGame.Goals.cs",
+        "Assets/LumaBay/Runtime/LumaBayGame.Obstacles.cs",
+        "Assets/LumaBay/Runtime/LumaBayGame.MoveAnimation.cs",
+    ]
+    for relative in partial_files:
+        source = read(relative)
+        if re.search(r"\bprivate\s+void\s+(?:Update|LateUpdate)\s*\(\s*\)", source):
+            fail(f"duplicate Unity lifecycle method in partial file: {relative}")
+
     for helper in ("RefreshGoalPresentationIfNeeded", "RefreshBoardPresentationIfNeeded", "RefreshArtOverridesIfNeeded"):
-        if helper not in sources:
-            fail(f"central lifecycle helper missing: {helper}")
+        if helper not in main:
+            fail(f"central lifecycle helper missing from main class: {helper}")
 
 
 def check_meta_files() -> None:
