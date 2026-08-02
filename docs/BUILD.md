@@ -8,19 +8,47 @@ Install Unity `6000.3.18f1` with:
 - Android SDK & NDK Tools;
 - OpenJDK.
 
+## Prepare the project
+
+Switch to branch:
+
+```text
+develop/0.1.1-alpha
+```
+
+Open the repository root in Unity Hub and wait until package import and script compilation finish. The editor bootstrap configures the Android player and generates the Luma Bay lighthouse application icon under the ignored local folder `Assets/LumaBay/Generated`.
+
+The setup can be repeated manually from:
+
+```text
+Luma Bay → Setup Project
+```
+
 ## Editor build
 
-Open the project and select:
+Select:
 
 ```text
 Luma Bay → Build Android Alpha
 ```
 
-The build script creates a development APK at:
+The build script creates the control APK at:
 
 ```text
-Builds/Android/LumaBay-0.1.0-alpha.apk
+Builds/Android/LumaBay-0.1.1-alpha.apk
 ```
+
+The 0.1.1 control build uses:
+
+- ARM64;
+- IL2CPP;
+- medium managed-code stripping;
+- portrait orientation;
+- Android 8.0 minimum;
+- non-development build options;
+- debug signing for internal testing.
+
+The `Development Build` watermark is therefore not expected in this APK.
 
 ## Command-line build
 
@@ -34,16 +62,30 @@ Windows example:
   -logFile "Builds/unity-build.log"
 ```
 
+## Install without deleting progress
+
+```powershell
+adb install -r "Builds\Android\LumaBay-0.1.1-alpha.apk"
+```
+
+The package ID remains `com.norvexa.lumabay`, and save schema migration preserves progress from the tested 0.1.0 Alpha.
+
 ## GitHub Actions
 
-The manual `Build Android Alpha` workflow uses GameCI. Add repository secrets:
+The optional `Build Android Alpha` workflow uses GameCI and is manual. It requires repository secrets appropriate to the selected Unity activation method, such as:
 
-- `UNITY_LICENSE` — the contents of a valid Unity Personal/Pro license file;
-- `UNITY_EMAIL` — Unity account email when required by the selected GameCI activation method;
-- `UNITY_PASSWORD` — Unity account password when required.
+- `UNITY_LICENSE`;
+- `UNITY_EMAIL`;
+- `UNITY_PASSWORD`.
 
-The workflow uploads the APK as `LumaBay-Android-Alpha`.
+Local Unity builds remain the primary control-build path so GitHub Actions minutes are not consumed for every change.
 
 ## Release signing
 
-Version 0.1 Alpha intentionally uses a development build and debug signing. Before public distribution, create a protected upload keystore outside Git, store it as encrypted CI secrets, disable `Development Build`, and generate an Android App Bundle.
+The 0.1.1 control APK still uses debug signing. Before Google Play distribution:
+
+1. create a protected upload keystore outside Git;
+2. store its values as encrypted local or CI secrets;
+3. generate an Android App Bundle;
+4. verify target API requirements;
+5. run closed testing and Play pre-launch reports.
