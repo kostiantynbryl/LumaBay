@@ -16,6 +16,7 @@ namespace LumaBay
             {
                 artOverrideSignature = int.MinValue;
                 premiumSkinSignature = int.MinValue;
+                finalVisualSignature = int.MinValue;
                 return;
             }
 
@@ -25,12 +26,14 @@ namespace LumaBay
             if (signature == artOverrideSignature)
             {
                 ApplyPremiumSkinV2IfNeeded();
+                ApplyFinalVisualPassIfNeeded();
                 return;
             }
             artOverrideSignature = signature;
 
             ApplyScreenPolish(screenRoot);
             ApplyPremiumSkinV2IfNeeded();
+            ApplyFinalVisualPassIfNeeded();
             if (!LumaBayArtPack.IsAvailable) return;
 
             ApplyBoosterArtwork(screenRoot);
