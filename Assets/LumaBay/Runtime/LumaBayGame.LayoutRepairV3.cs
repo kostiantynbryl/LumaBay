@@ -38,11 +38,6 @@ namespace LumaBay
 
             LumaBayPremiumCompositionV2 composition = FindFirstObjectByType<LumaBayPremiumCompositionV2>();
             if (composition != null) composition.enabled = false;
-
-            foreach (LumaBayPanelToneGuard guard in FindObjectsByType<LumaBayPanelToneGuard>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                if (guard != null) guard.enabled = false;
-            foreach (PanelShadowLayoutGuard guard in FindObjectsByType<PanelShadowLayoutGuard>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                if (guard != null) guard.enabled = false;
         }
 
         private void ApplyStableBackgroundV5()
@@ -143,24 +138,12 @@ namespace LumaBay
 
         private void RepairMapV5()
         {
-            RectTransform root = FindInRoot("VerticalScreen") as RectTransform;
-            if (root == null) return;
-            VerticalLayoutGroup layout = root.GetComponent<VerticalLayoutGroup>();
-            if (layout != null)
-            {
-                layout.padding = new RectOffset(24, 24, 18, 20);
-                layout.spacing = 12f;
-            }
-
             StylePanelByNameV5("MapHeader", PanelDark, 90f);
             StylePanelByNameV5("LighthouseMetaCard", PanelDark, 500f);
             StylePanelByNameV5("TaskCard", PanelDark, 168f);
             SetPreferredV5(FindInRoot("MetaProgressRow") as RectTransform, 46f);
 
-            RectTransform progressTrack = FindInRoot("LongProgressTrack") as RectTransform;
-            if (progressTrack != null) SetSolidPanelV5(progressTrack.GetComponent<Image>(), new Color(0.005f, 0.035f, 0.055f, 0.96f), "v5_progress", 12);
-
-            foreach (Button button in root.GetComponentsInChildren<Button>(true))
+            foreach (Button button in screenRoot.GetComponentsInChildren<Button>(true))
             {
                 Text label = button.GetComponentInChildren<Text>(true);
                 if (label == null) continue;
@@ -173,15 +156,6 @@ namespace LumaBay
 
         private void RepairSettingsV5()
         {
-            RectTransform root = FindInRoot("VerticalScreen") as RectTransform;
-            if (root == null) return;
-            VerticalLayoutGroup screenLayout = root.GetComponent<VerticalLayoutGroup>();
-            if (screenLayout != null)
-            {
-                screenLayout.padding = new RectOffset(28, 28, 24, 24);
-                screenLayout.spacing = 16f;
-            }
-
             StylePanelByNameV5("SettingsHeader", PanelDark, 94f);
             RectTransform card = FindInRoot("SettingsCard") as RectTransform;
             SetPreferredV5(card, 610f);
@@ -205,22 +179,8 @@ namespace LumaBay
 
         private void RepairLevelSelectorV5()
         {
-            RectTransform header = FindInRoot("LevelsHeader") as RectTransform;
-            if (header != null)
-            {
-                header.anchorMin = new Vector2(0.03f, 0.905f);
-                header.anchorMax = new Vector2(0.97f, 0.985f);
-                header.offsetMin = Vector2.zero;
-                header.offsetMax = Vector2.zero;
-                SetSolidPanelV5(header.GetComponent<Image>(), PanelDark, "v5_levels_header", 22);
-            }
-
             RectTransform scrollRoot = FindInRoot("LevelScroll") as RectTransform;
             if (scrollRoot == null) return;
-            scrollRoot.anchorMin = new Vector2(0.03f, 0.025f);
-            scrollRoot.anchorMax = new Vector2(0.97f, 0.89f);
-            scrollRoot.offsetMin = Vector2.zero;
-            scrollRoot.offsetMax = Vector2.zero;
             SetSolidPanelV5(scrollRoot.GetComponent<Image>(), new Color(0.008f, 0.052f, 0.082f, 0.94f), "v5_level_scroll", 28);
 
             ScrollRect scroll = scrollRoot.GetComponent<ScrollRect>();
@@ -231,14 +191,11 @@ namespace LumaBay
             Mask oldMask = viewport.GetComponent<Mask>();
             if (oldMask != null) oldMask.enabled = false;
             if (viewport.GetComponent<RectMask2D>() == null) viewport.gameObject.AddComponent<RectMask2D>();
-            Image viewportImage = viewport.GetComponent<Image>();
-            if (viewportImage != null) viewportImage.color = new Color(1f, 1f, 1f, 0.001f);
 
             viewport.anchorMin = Vector2.zero;
             viewport.anchorMax = Vector2.one;
             viewport.offsetMin = new Vector2(18f, 18f);
             viewport.offsetMax = new Vector2(-18f, -18f);
-            viewport.localScale = Vector3.one;
             content.gameObject.SetActive(true);
             content.localScale = Vector3.one;
 
@@ -262,7 +219,6 @@ namespace LumaBay
             grid.padding = new RectOffset(14, 14, 14, 18);
             grid.spacing = new Vector2(gap, gap);
             grid.cellSize = new Vector2(cellWidth, cellHeight);
-            grid.childAlignment = TextAnchor.UpperCenter;
 
             CanvasGroup contentGroup = content.GetComponent<CanvasGroup>();
             if (contentGroup == null) contentGroup = content.gameObject.AddComponent<CanvasGroup>();
@@ -275,52 +231,18 @@ namespace LumaBay
                 Transform card = content.GetChild(i);
                 card.gameObject.SetActive(true);
                 card.localScale = Vector3.one;
-                card.localRotation = Quaternion.identity;
                 UiEntranceMotion motion = card.GetComponent<UiEntranceMotion>();
                 if (motion != null) motion.enabled = false;
-
-                CanvasGroup group = card.GetComponent<CanvasGroup>();
-                if (group == null) group = card.gameObject.AddComponent<CanvasGroup>();
-                group.alpha = 1f;
-                group.interactable = true;
-                group.blocksRaycasts = true;
 
                 Button button = card.GetComponent<Button>();
                 bool unlocked = button == null || button.interactable;
                 SetSolidPanelV5(card.GetComponent<Image>(), unlocked ? PanelSoft : new Color(0.025f, 0.06f, 0.08f, 0.95f), "v5_level_card_" + i, 22);
-
-                Text label = card.GetComponentInChildren<Text>(true);
-                if (label != null)
-                {
-                    label.gameObject.SetActive(true);
-                    label.color = unlocked ? Color.white : new Color(0.55f, 0.62f, 0.66f, 1f);
-                    label.fontSize = 25;
-                    label.resizeTextForBestFit = true;
-                    label.resizeTextMinSize = 15;
-                    label.resizeTextMaxSize = 25;
-                    label.rectTransform.anchorMin = new Vector2(0.06f, 0.03f);
-                    label.rectTransform.anchorMax = new Vector2(0.94f, 0.46f);
-                    label.rectTransform.offsetMin = Vector2.zero;
-                    label.rectTransform.offsetMax = Vector2.zero;
-                }
-
-                RectTransform icon = card.Find("LevelTargetIcon") as RectTransform;
-                if (icon != null)
-                {
-                    icon.gameObject.SetActive(unlocked);
-                    icon.anchorMin = new Vector2(0.30f, 0.48f);
-                    icon.anchorMax = new Vector2(0.70f, 0.91f);
-                    icon.offsetMin = Vector2.zero;
-                    icon.offsetMax = Vector2.zero;
-                }
             }
 
             scroll.content = content;
             scroll.viewport = viewport;
             scroll.horizontal = false;
             scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         }
 
@@ -330,9 +252,6 @@ namespace LumaBay
             StylePanelByNameV5("TopHud", PanelDark, 82f);
             StylePanelByNameV5("GoalsPanel", PanelDark, 108f);
 
-            RectTransform boardFrame = FindInRoot("BoardFrame") as RectTransform;
-            if (boardFrame != null) SetSolidPanelV5(boardFrame.GetComponent<Image>(), new Color(0.005f, 0.045f, 0.07f, 0.98f), "v5_board", 24);
-
             RectTransform tray = FindInRoot("BoosterTray") as RectTransform;
             if (tray == null) tray = FindInRoot("BoosterRow") as RectTransform;
             if (tray == null) tray = FindInRoot("BoostersRow") as RectTransform;
@@ -340,38 +259,14 @@ namespace LumaBay
 
             SetPreferredV5(tray, 154f);
             SetSolidPanelV5(tray.GetComponent<Image>(), new Color(0.008f, 0.052f, 0.08f, 0.94f), "v5_booster_tray", 24);
-            HorizontalLayoutGroup row = tray.GetComponent<HorizontalLayoutGroup>();
-            if (row != null)
-            {
-                row.padding = new RectOffset(10, 10, 10, 10);
-                row.spacing = 9f;
-                row.childAlignment = TextAnchor.MiddleCenter;
-                row.childControlWidth = true;
-                row.childControlHeight = true;
-                row.childForceExpandWidth = true;
-                row.childForceExpandHeight = false;
-            }
-
             foreach (Button booster in tray.GetComponentsInChildren<Button>(true))
             {
                 LayoutElement element = booster.GetComponent<LayoutElement>();
                 if (element == null) element = booster.gameObject.AddComponent<LayoutElement>();
-                element.minWidth = 0f;
                 element.preferredWidth = 112f;
                 element.flexibleWidth = 1f;
-                element.minHeight = 128f;
                 element.preferredHeight = 128f;
-                element.flexibleHeight = 0f;
                 SetSolidPanelV5(booster.GetComponent<Image>(), ButtonDark, "v5_booster_" + booster.GetInstanceID(), 20);
-
-                foreach (Text label in booster.GetComponentsInChildren<Text>(true))
-                {
-                    bool price = label.text != null && label.text.Contains("◆");
-                    bool shortIcon = !price && !string.IsNullOrEmpty(label.text) && label.text.Length <= 4;
-                    label.gameObject.SetActive(price || shortIcon);
-                    label.color = price ? GoldText : Color.white;
-                    label.fontSize = price ? 14 : 27;
-                }
             }
         }
 
@@ -387,8 +282,7 @@ namespace LumaBay
         {
             if (button == null) return;
             SetPreferredV5(button.transform as RectTransform, height);
-            Color color = overrideColor ?? (primary ? ButtonPrimary : ButtonDark);
-            SetSolidPanelV5(button.GetComponent<Image>(), color, "v5_button_" + button.GetInstanceID(), 22);
+            SetSolidPanelV5(button.GetComponent<Image>(), overrideColor ?? (primary ? ButtonPrimary : ButtonDark), "v5_button_" + button.GetInstanceID(), 22);
 
             Text label = button.GetComponentInChildren<Text>(true);
             if (label != null)
