@@ -9,7 +9,7 @@ namespace LumaBay
         private static readonly Dictionary<string, Sprite> Named = new Dictionary<string, Sprite>();
         private static readonly HashSet<string> MissingLogged = new HashSet<string>();
 
-        public static bool IsAvailable => GetNamed("tiles", 0) != null;
+        public static bool IsAvailable => GetNamed("tiles", 0) != null && GetNamed("ui", 20) != null;
 
         public static Sprite Piece(PieceKind kind)
         {
@@ -51,20 +51,29 @@ namespace LumaBay
         public static Sprite MapBackground => GetNamed("backgrounds", 2);
         public static Sprite StoryBackground => GetNamed("backgrounds", 3);
 
+        // ui.png was authored as a fixed 21-element sheet. These mappings match the
+        // actual top-to-bottom/left-to-right importer order and intentionally avoid
+        // the baked English "Moves 16" panel at ui_01.
         public static Sprite PanelLarge => GetNamed("ui", 0);
-        public static Sprite MovesPanel => GetNamed("ui", 1);
-        public static Sprite PrimaryButton => GetNamed("ui", 3);
-        public static Sprite SecondaryButton => GetNamed("ui", 5);
+        public static Sprite HeaderPanel => GetNamed("ui", 3);
+        public static Sprite MediumPanel => GetNamed("ui", 5);
+        public static Sprite PrimaryButton => GetNamed("ui", 6);
         public static Sprite GoalsPanel => GetNamed("ui", 7);
+        public static Sprite ProgressDecor => GetNamed("ui", 8);
+        public static Sprite CompactButton => GetNamed("ui", 16);
         public static Sprite ProgressTrack => GetNamed("ui", 17);
-        public static Sprite ProgressFill => GetNamed("ui", 18);
+        public static Sprite TaskPanel => GetNamed("ui", 18);
+        public static Sprite SecondaryButton => GetNamed("ui", 19);
         public static Sprite BoosterTray => GetNamed("ui", 20);
+
+        public static Sprite UiBoosterMedallion(int index)
+        {
+            return index >= 0 && index < 7 ? GetNamed("ui", 9 + index) : null;
+        }
 
         public static Sprite MapNode(int index) => GetNamed("map", index);
         public static Sprite Obstacle(int index) => GetNamed("obstacles", index);
 
-        // Strict indexed access retained for compatibility. Out-of-range requests return null
-        // instead of silently substituting the final sprite in the sheet.
         public static Sprite Get(string sheet, int index)
         {
             return GetNamed(sheet, index);
