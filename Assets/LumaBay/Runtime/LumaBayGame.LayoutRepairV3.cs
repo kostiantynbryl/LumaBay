@@ -6,48 +6,37 @@ namespace LumaBay
 {
     public sealed partial class LumaBayGame
     {
-        private float nextStableInterfacePass;
-        private bool legacyVisualLayersDisabled;
-
-        private static readonly Color PanelDark = new Color(0.018f, 0.085f, 0.135f, 0.97f);
-        private static readonly Color PanelSoft = new Color(0.025f, 0.135f, 0.195f, 0.97f);
-        private static readonly Color ButtonDark = new Color(0.025f, 0.20f, 0.28f, 0.99f);
-        private static readonly Color ButtonPrimary = new Color(0.02f, 0.60f, 0.66f, 1f);
+        private static readonly Color PanelTint = new Color(0.16f, 0.36f, 0.44f, 0.98f);
+        private static readonly Color PanelTintSoft = new Color(0.20f, 0.47f, 0.55f, 0.98f);
+        private static readonly Color SecondaryTint = new Color(0.18f, 0.50f, 0.58f, 1f);
         private static readonly Color GoldText = new Color(1f, 0.84f, 0.42f, 1f);
         private static readonly Color MutedText = new Color(0.66f, 0.76f, 0.80f, 1f);
 
         private void ApplyStableInterfaceV4()
         {
-            if (screenRoot == null || Time.unscaledTime < nextStableInterfacePass) return;
-            nextStableInterfacePass = Time.unscaledTime + 0.12f;
+            if (screenRoot == null) return;
 
-            DisableLegacyVisualLayersV6();
-            ApplyStableBackgroundV6();
-            NormalizeTransientLayersV6();
+            Canvas.ForceUpdateCanvases();
+            ApplyStableBackgroundV7();
+            NormalizeTransientLayersV7();
 
-            if (FindInRoot("MainHero") != null) RepairMainMenuV6();
-            else if (FindInRoot("LighthouseMetaCard") != null) RepairMapV6();
-            else if (FindInRoot("SettingsHeader") != null) RepairSettingsV6();
-            else if (FindInRoot("LevelScroll") != null) RepairLevelSelectorV6();
-            else if (FindInRoot("BoardFrame") != null || FindInRoot("BoardGrid") != null) RepairGameplayV6();
+            if (FindInRoot("MainHero") != null) RepairMainMenuV7();
+            else if (FindInRoot("LighthouseMetaCard") != null) RepairMapV7();
+            else if (FindInRoot("SettingsHeader") != null) RepairSettingsV7();
+            else if (FindInRoot("LevelScroll") != null) RepairLevelSelectorV7();
+            else if (FindInRoot("BoardFrame") != null || FindInRoot("Board") != null) RepairGameplayV7();
+
+            Canvas.ForceUpdateCanvases();
         }
 
-        private void DisableLegacyVisualLayersV6()
-        {
-            if (legacyVisualLayersDisabled) return;
-            legacyVisualLayersDisabled = true;
-            LumaBayPremiumCompositionV2 composition = FindFirstObjectByType<LumaBayPremiumCompositionV2>();
-            if (composition != null) composition.enabled = false;
-        }
-
-        private void ApplyStableBackgroundV6()
+        private void ApplyStableBackgroundV7()
         {
             Transform backgroundTransform = canvas != null ? canvas.transform.Find("Background") : null;
             Image background = backgroundTransform != null ? backgroundTransform.GetComponent<Image>() : null;
             if (background == null) return;
 
             Sprite selected;
-            if (FindInRoot("BoardFrame") != null || FindInRoot("BoardGrid") != null)
+            if (FindInRoot("BoardFrame") != null || FindInRoot("Board") != null)
                 selected = LumaBayArtPackV2.GameplayBackground;
             else if (FindInRoot("MapHeader") != null || FindInRoot("LevelScroll") != null)
                 selected = LumaBayArtPackV2.MapBackground;
@@ -61,7 +50,7 @@ namespace LumaBay
             background.preserveAspect = false;
         }
 
-        private void NormalizeTransientLayersV6()
+        private void NormalizeTransientLayersV7()
         {
             if (canvas == null) return;
             Transform modal = canvas.transform.Find("ModalOverlay");
@@ -71,160 +60,197 @@ namespace LumaBay
             RectTransform panel = modal.Find("ModalPanel") as RectTransform;
             if (panel == null) return;
 
-            panel.anchorMin = new Vector2(0.075f, 0.22f);
-            panel.anchorMax = new Vector2(0.925f, 0.78f);
+            panel.anchorMin = new Vector2(0.075f, 0.27f);
+            panel.anchorMax = new Vector2(0.925f, 0.73f);
             panel.offsetMin = Vector2.zero;
             panel.offsetMax = Vector2.zero;
             panel.localScale = Vector3.one;
-            SetSolidPanelV6(panel.GetComponent<Image>(), PanelDark, "v6_modal", 30);
+            ApplyPanelV7(panel.GetComponent<Image>(), LumaBayArtPackV2.PanelLarge, PanelTint);
 
             VerticalLayoutGroup layout = panel.GetComponent<VerticalLayoutGroup>();
             if (layout != null)
             {
                 layout.padding = new RectOffset(34, 34, 30, 30);
-                layout.spacing = 14f;
-            }
-
-            Button[] buttons = panel.GetComponentsInChildren<Button>(true);
-            for (int i = 0; i < buttons.Length; i++) StyleButtonV6(buttons[i], i == 0, i == 0 ? 84f : 68f);
-        }
-
-        private void RepairMainMenuV6()
-        {
-            RectTransform root = FindInRoot("VerticalScreen") as RectTransform;
-            if (root == null) return;
-            VerticalLayoutGroup layout = root.GetComponent<VerticalLayoutGroup>();
-            if (layout != null)
-            {
-                layout.padding = new RectOffset(32, 32, 20, 20);
                 layout.spacing = 12f;
             }
 
-            SetPreferredV6(FindInRoot("LogoBlock") as RectTransform, 98f);
+            foreach (ButtonRole marker in panel.GetComponentsInChildren<ButtonRole>(true))
+            {
+                Button button = marker.GetComponent<Button>();
+                if (button == null) continue;
+                if (marker.Id == ButtonRoleId.ModalPrimary) StyleButtonV6(button, true, 78f);
+                else if (marker.Id == ButtonRoleId.ModalSecondary) StyleButtonV6(button, false, 64f);
+            }
+        }
+
+        private void RepairMainMenuV7()
+        {
+            RectTransform root = FindInRoot("VerticalScreen") as RectTransform;
+            if (root == null) return;
+
+            VerticalLayoutGroup layout = root.GetComponent<VerticalLayoutGroup>();
+            if (layout != null)
+            {
+                layout.padding = new RectOffset(28, 28, 20, 18);
+                layout.spacing = 10f;
+            }
+
+            SetPreferredV6(FindInRoot("LogoBlock") as RectTransform, 96f);
+
             RectTransform hero = FindInRoot("MainHero") as RectTransform;
-            SetPreferredV6(hero, 480f);
-            if (hero != null) SetSolidPanelV6(hero.GetComponent<Image>(), PanelDark, "v6_main_hero", 30);
+            SetPreferredV6(hero, 430f);
+            if (hero != null)
+            {
+                ApplyPanelV7(hero.GetComponent<Image>(), LumaBayArtPackV2.PanelLarge, PanelTint);
+                Transform lighthouse = hero.Find("PremiumLighthouseVisual");
+                if (lighthouse is RectTransform imageRect)
+                {
+                    imageRect.anchorMin = new Vector2(0.055f, 0.055f);
+                    imageRect.anchorMax = new Vector2(0.945f, 0.945f);
+                    imageRect.offsetMin = Vector2.zero;
+                    imageRect.offsetMax = Vector2.zero;
+                    Image image = lighthouse.GetComponent<Image>();
+                    if (image != null) image.preserveAspect = true;
+                }
+            }
 
             RectTransform row = FindInRoot("MainSecondaryRow") as RectTransform;
-            SetPreferredV6(row, 92f);
+            SetPreferredV6(row, 78f);
             HorizontalLayoutGroup rowLayout = row != null ? row.GetComponent<HorizontalLayoutGroup>() : null;
             if (rowLayout != null)
             {
-                rowLayout.spacing = 14f;
-                rowLayout.padding = new RectOffset(0, 0, 2, 2);
+                rowLayout.spacing = 12f;
+                rowLayout.padding = new RectOffset(0, 0, 1, 1);
                 rowLayout.childControlHeight = true;
                 rowLayout.childForceExpandHeight = true;
+                rowLayout.childForceExpandWidth = true;
             }
 
-            foreach (Button button in root.GetComponentsInChildren<Button>(true))
-            {
-                Text label = button.GetComponentInChildren<Text>(true);
-                if (label == null) continue;
-                string value = StripRichTextV6(label.text).ToUpperInvariant();
-                if (value.Contains("ИГРАТЬ") || value == "PLAY") StyleButtonV6(button, true, 96f);
-                else if (value.Contains("УРОВНИ") || value.Contains("LEVELS") || value.Contains("НАСТРОЙКИ") || value.Contains("SETTINGS"))
-                    StyleButtonV6(button, false, 84f);
-            }
+            StyleRoleButtonsV7(root);
 
             foreach (Text text in root.GetComponentsInChildren<Text>(true))
             {
                 if (text.text != null && text.text.StartsWith("LUMA BAY", StringComparison.OrdinalIgnoreCase))
                 {
                     text.color = GoldText;
-                    text.fontSize = 56;
+                    text.fontSize = 54;
                 }
                 else if (text.text != null && text.text.Contains("★") && text.text.Contains("◆"))
                 {
                     text.fontSize = 20;
                     text.color = GoldText;
+                    text.alignment = TextAnchor.MiddleCenter;
                 }
             }
         }
 
-        private void RepairMapV6()
+        private void RepairMapV7()
         {
-            StylePanelByNameV6("MapHeader", PanelDark, 86f);
-            StylePanelByNameV6("LighthouseMetaCard", PanelDark, 480f);
-            StylePanelByNameV6("TaskCard", PanelDark, 156f);
-            SetPreferredV6(FindInRoot("MetaProgressRow") as RectTransform, 42f);
+            RectTransform root = FindInRoot("VerticalScreen") as RectTransform;
+            if (root == null) return;
 
-            RectTransform progressTrack = FindInRoot("LongProgressTrack") as RectTransform;
-            if (progressTrack != null)
-                SetSolidPanelV6(progressTrack.GetComponent<Image>(), new Color(0.004f, 0.035f, 0.055f, 0.98f), "v6_progress", 12);
-
-            Text[] texts = screenRoot.GetComponentsInChildren<Text>(true);
-            foreach (Text text in texts)
+            VerticalLayoutGroup layout = root.GetComponent<VerticalLayoutGroup>();
+            if (layout != null)
             {
-                if (text == null || string.IsNullOrEmpty(text.text)) continue;
-                if (text.text.Contains("СПАСЕНИЕ") || text.text.Contains("RESCUE"))
+                layout.padding = new RectOffset(22, 22, 16, 16);
+                layout.spacing = 9f;
+            }
+
+            RectTransform header = FindInRoot("MapHeader") as RectTransform;
+            SetPreferredV6(header, 82f);
+            if (header != null) ApplyPanelV7(header.GetComponent<Image>(), LumaBayArtPackV2.HeaderPanel, PanelTintSoft);
+
+            RectTransform lighthouseCard = FindInRoot("LighthouseMetaCard") as RectTransform;
+            SetPreferredV6(lighthouseCard, 410f);
+            if (lighthouseCard != null)
+            {
+                ApplyPanelV7(lighthouseCard.GetComponent<Image>(), LumaBayArtPackV2.PanelLarge, PanelTint);
+                Transform lighthouse = lighthouseCard.Find("PremiumLighthouseVisual");
+                if (lighthouse is RectTransform imageRect)
                 {
-                    text.fontSize = 17;
-                    text.color = new Color(0.48f, 0.90f, 0.96f, 1f);
-                }
-                else if (text.text.Contains("Восстанов") || text.text.Contains("Restore"))
-                {
-                    text.resizeTextForBestFit = true;
+                    imageRect.anchorMin = new Vector2(0.055f, 0.055f);
+                    imageRect.anchorMax = new Vector2(0.945f, 0.945f);
+                    imageRect.offsetMin = Vector2.zero;
+                    imageRect.offsetMax = Vector2.zero;
+                    Image image = lighthouse.GetComponent<Image>();
+                    if (image != null) image.preserveAspect = true;
                 }
             }
 
-            foreach (Button button in screenRoot.GetComponentsInChildren<Button>(true))
-            {
-                Text label = button.GetComponentInChildren<Text>(true);
-                if (label == null) continue;
-                string value = StripRichTextV6(label.text).ToUpperInvariant();
-                if (value.Contains("НАЧАТЬ") || value.Contains("START")) StyleButtonV6(button, true, 92f);
-                else if (value.Contains("ВОССТ") || value.Contains("RESTORE") || value.Contains("ОТКРОЕТСЯ") || value.Contains("UNLOCKS")) StyleButtonV6(button, false, 76f);
-                else if (value.Contains("УРОВНИ") || value.Contains("LEVELS")) StyleButtonV6(button, false, 66f);
-            }
+            RectTransform task = FindInRoot("TaskCard") as RectTransform;
+            SetPreferredV6(task, 146f);
+            if (task != null) ApplyPanelV7(task.GetComponent<Image>(), LumaBayArtPackV2.TaskPanel, PanelTintSoft);
+
+            SetPreferredV6(FindInRoot("MetaProgressRow") as RectTransform, 38f);
+            RectTransform progress = FindInRoot("LongProgressTrack") as RectTransform;
+            if (progress != null)
+                ApplyPanelV7(progress.GetComponent<Image>(), LumaBayArtPackV2.ProgressTrack, Color.white);
+
+            StyleRoleButtonsV7(root);
         }
 
-        private void RepairSettingsV6()
+        private void RepairSettingsV7()
         {
-            StylePanelByNameV6("SettingsHeader", PanelDark, 88f);
+            RectTransform root = FindInRoot("VerticalScreen") as RectTransform;
+            if (root == null) return;
+
+            VerticalLayoutGroup rootLayout = root.GetComponent<VerticalLayoutGroup>();
+            if (rootLayout != null)
+            {
+                rootLayout.padding = new RectOffset(24, 24, 18, 18);
+                rootLayout.spacing = 12f;
+            }
+
+            RectTransform header = FindInRoot("SettingsHeader") as RectTransform;
+            SetPreferredV6(header, 82f);
+            if (header != null) ApplyPanelV7(header.GetComponent<Image>(), LumaBayArtPackV2.HeaderPanel, PanelTintSoft);
+
             RectTransform card = FindInRoot("SettingsCard") as RectTransform;
-            SetPreferredV6(card, 500f);
-            if (card != null) SetSolidPanelV6(card.GetComponent<Image>(), PanelDark, "v6_settings_card", 30);
+            SetPreferredV6(card, 456f);
+            if (card != null) ApplyPanelV7(card.GetComponent<Image>(), LumaBayArtPackV2.PanelLarge, PanelTint);
 
             VerticalLayoutGroup cardLayout = card != null ? card.GetComponent<VerticalLayoutGroup>() : null;
             if (cardLayout != null)
             {
-                cardLayout.padding = new RectOffset(28, 28, 26, 26);
-                cardLayout.spacing = 14f;
+                cardLayout.padding = new RectOffset(26, 26, 24, 24);
+                cardLayout.spacing = 12f;
             }
 
             if (card != null)
             {
-                Transform[] children = card.GetComponentsInChildren<Transform>(true);
-                foreach (Transform child in children)
+                foreach (Transform child in card.GetComponentsInChildren<Transform>(true))
                 {
-                    if (child.name == "Spacer")
-                    {
-                        LayoutElement spacer = child.GetComponent<LayoutElement>();
-                        if (spacer != null)
-                        {
-                            spacer.flexibleHeight = 0f;
-                            spacer.minHeight = 8f;
-                            spacer.preferredHeight = 8f;
-                        }
-                    }
+                    if (child.name != "Spacer") continue;
+                    LayoutElement spacer = child.GetComponent<LayoutElement>();
+                    if (spacer == null) continue;
+                    spacer.flexibleHeight = 0f;
+                    spacer.minHeight = 6f;
+                    spacer.preferredHeight = 6f;
                 }
             }
 
-            Button[] buttons = card != null ? card.GetComponentsInChildren<Button>(true) : Array.Empty<Button>();
-            foreach (Button button in buttons)
-            {
-                Text label = button.GetComponentInChildren<Text>(true);
-                bool reset = label != null && (label.text.Contains("Сброс", StringComparison.OrdinalIgnoreCase) || label.text.Contains("Reset", StringComparison.OrdinalIgnoreCase));
-                StyleButtonV6(button, false, reset ? 70f : 78f,
-                    reset ? new Color(0.40f, 0.10f, 0.14f, 0.99f) : ButtonDark);
-            }
+            StyleRoleButtonsV7(root);
         }
 
-        private void RepairLevelSelectorV6()
+        private void RepairLevelSelectorV7()
         {
+            RectTransform header = FindInRoot("LevelsHeader") as RectTransform;
+            if (header != null)
+            {
+                header.anchorMin = new Vector2(0.025f, 0.915f);
+                header.anchorMax = new Vector2(0.975f, 0.988f);
+                header.offsetMin = Vector2.zero;
+                header.offsetMax = Vector2.zero;
+                ApplyPanelV7(header.GetComponent<Image>(), LumaBayArtPackV2.HeaderPanel, PanelTintSoft);
+            }
+
             RectTransform scrollRoot = FindInRoot("LevelScroll") as RectTransform;
             if (scrollRoot == null) return;
-            SetSolidPanelV6(scrollRoot.GetComponent<Image>(), new Color(0.006f, 0.045f, 0.072f, 0.96f), "v6_level_scroll", 28);
+            scrollRoot.anchorMin = new Vector2(0.025f, 0.018f);
+            scrollRoot.anchorMax = new Vector2(0.975f, 0.900f);
+            scrollRoot.offsetMin = Vector2.zero;
+            scrollRoot.offsetMax = Vector2.zero;
+            ApplyPanelV7(scrollRoot.GetComponent<Image>(), LumaBayArtPackV2.PanelLarge, PanelTint);
 
             ScrollRect scroll = scrollRoot.GetComponent<ScrollRect>();
             RectTransform viewport = scrollRoot.Find("Viewport") as RectTransform;
@@ -237,38 +263,30 @@ namespace LumaBay
 
             viewport.anchorMin = Vector2.zero;
             viewport.anchorMax = Vector2.one;
-            viewport.offsetMin = new Vector2(14f, 14f);
-            viewport.offsetMax = new Vector2(-14f, -14f);
-            content.gameObject.SetActive(true);
-            content.localScale = Vector3.one;
+            viewport.offsetMin = new Vector2(18f, 18f);
+            viewport.offsetMax = new Vector2(-18f, -24f);
 
             const int columns = 3;
             const float gap = 12f;
             float width = viewport.rect.width > 300f ? viewport.rect.width : 640f;
             float cellWidth = Mathf.Floor((width - gap * 2f - 24f) / columns);
-            float cellHeight = 142f;
+            float cellHeight = 150f;
             int rows = Mathf.CeilToInt(Mathf.Max(1, content.childCount) / (float)columns);
 
             content.anchorMin = new Vector2(0f, 1f);
             content.anchorMax = new Vector2(1f, 1f);
             content.pivot = new Vector2(0.5f, 1f);
             content.anchoredPosition = Vector2.zero;
-            content.sizeDelta = new Vector2(0f, rows * cellHeight + Mathf.Max(0, rows - 1) * gap + 28f);
+            content.sizeDelta = new Vector2(0f, rows * cellHeight + Mathf.Max(0, rows - 1) * gap + 44f);
 
             GridLayoutGroup grid = content.GetComponent<GridLayoutGroup>();
             if (grid == null) grid = content.gameObject.AddComponent<GridLayoutGroup>();
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = columns;
-            grid.padding = new RectOffset(12, 12, 12, 16);
+            grid.padding = new RectOffset(12, 12, 12, 28);
             grid.spacing = new Vector2(gap, gap);
             grid.cellSize = new Vector2(cellWidth, cellHeight);
             grid.childAlignment = TextAnchor.UpperCenter;
-
-            CanvasGroup contentGroup = content.GetComponent<CanvasGroup>();
-            if (contentGroup == null) contentGroup = content.gameObject.AddComponent<CanvasGroup>();
-            contentGroup.alpha = 1f;
-            contentGroup.interactable = true;
-            contentGroup.blocksRaycasts = true;
 
             for (int i = 0; i < content.childCount; i++)
             {
@@ -280,24 +298,28 @@ namespace LumaBay
                 UiEntranceMotion motion = card.GetComponent<UiEntranceMotion>();
                 if (motion != null) motion.enabled = false;
 
-                CanvasGroup group = card.GetComponent<CanvasGroup>();
-                if (group == null) group = card.gameObject.AddComponent<CanvasGroup>();
-                group.alpha = 1f;
-                group.interactable = true;
-                group.blocksRaycasts = true;
-
-                Button button = card.GetComponent<Button>();
-                bool unlocked = button == null || button.interactable;
+                bool unlocked = save != null && i < save.UnlockedLevel;
                 bool current = save != null && i + 1 == save.UnlockedLevel;
-                Color cardColor = !unlocked
-                    ? new Color(0.018f, 0.052f, 0.07f, 0.96f)
-                    : current ? new Color(0.02f, 0.34f, 0.39f, 0.99f) : PanelSoft;
-                SetSolidPanelV6(card.GetComponent<Image>(), cardColor, "v6_level_card_" + i, 22);
+                int stars = save != null && i < save.StarsByLevel.Count ? save.StarsByLevel[i] : 0;
+                int nodeIndex = !unlocked ? 0 : Mathf.Clamp(stars + 1, 1, 4);
 
-                Text[] labels = card.GetComponentsInChildren<Text>(true);
-                foreach (Text label in labels)
+                Image cardImage = card.GetComponent<Image>();
+                if (cardImage != null)
                 {
-                    if (label == null) continue;
+                    Sprite node = LumaBayArtPackV2.MapNode(nodeIndex);
+                    if (node != null)
+                    {
+                        cardImage.sprite = node;
+                        cardImage.type = Image.Type.Simple;
+                        cardImage.preserveAspect = true;
+                        cardImage.color = current
+                            ? new Color(0.80f, 1f, 1f, 1f)
+                            : Color.white;
+                    }
+                }
+
+                foreach (Text label in card.GetComponentsInChildren<Text>(true))
+                {
                     if ((label.text ?? string.Empty).Trim() == "◆")
                     {
                         label.gameObject.SetActive(false);
@@ -314,118 +336,221 @@ namespace LumaBay
                 if (icon != null)
                 {
                     icon.gameObject.SetActive(unlocked);
-                    icon.anchorMin = new Vector2(0.30f, 0.50f);
-                    icon.anchorMax = new Vector2(0.70f, 0.92f);
+                    icon.anchorMin = new Vector2(0.31f, 0.50f);
+                    icon.anchorMax = new Vector2(0.69f, 0.88f);
                     icon.offsetMin = Vector2.zero;
                     icon.offsetMax = Vector2.zero;
                 }
             }
 
-            scroll.content = content;
-            scroll.viewport = viewport;
             scroll.horizontal = false;
             scroll.vertical = true;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            Canvas.ForceUpdateCanvases();
+
+            int currentRow = save != null ? Mathf.Max(0, (save.UnlockedLevel - 1) / columns) : 0;
+            float contentHeight = Mathf.Max(1f, content.sizeDelta.y - viewport.rect.height);
+            float currentOffset = Mathf.Clamp(currentRow * (cellHeight + gap) - viewport.rect.height * 0.35f, 0f, contentHeight);
+            content.anchoredPosition = new Vector2(0f, currentOffset);
+
+            StyleRoleButtonsV7(header);
             LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         }
 
-        private void RepairGameplayV6()
+        private void RepairGameplayV7()
         {
-            StylePanelByNameV6("GameplayHeader", PanelDark, 78f);
-            StylePanelByNameV6("TopHud", PanelDark, 78f);
-            StylePanelByNameV6("GoalsPanel", PanelDark, 96f);
+            RectTransform header = FindInRoot("GameHeader") as RectTransform;
+            if (header != null)
+            {
+                header.anchorMin = new Vector2(0.018f, 0.928f);
+                header.anchorMax = new Vector2(0.982f, 0.994f);
+                header.offsetMin = Vector2.zero;
+                header.offsetMax = Vector2.zero;
+                ApplyPanelV7(header.GetComponent<Image>(), LumaBayArtPackV2.HeaderPanel, PanelTintSoft);
+            }
+
+            RectTransform moves = FindInRoot("MovesChip") as RectTransform;
+            if (moves != null)
+                ApplyPanelV7(moves.GetComponent<Image>(), LumaBayArtPackV2.CompactButton, Color.white);
+
+            RectTransform goals = FindInRoot("Goals") as RectTransform;
+            if (goals != null)
+            {
+                goals.anchorMin = new Vector2(0.026f, 0.842f);
+                goals.anchorMax = new Vector2(0.974f, 0.918f);
+                goals.offsetMin = Vector2.zero;
+                goals.offsetMax = Vector2.zero;
+                ApplyPanelV7(goals.GetComponent<Image>(), LumaBayArtPackV2.HeaderPanel, PanelTintSoft);
+            }
+
+            RectTransform boardZone = FindInRoot("BoardZone") as RectTransform;
+            if (boardZone != null)
+            {
+                boardZone.anchorMin = new Vector2(0f, 0.188f);
+                boardZone.anchorMax = new Vector2(1f, 0.832f);
+                boardZone.offsetMin = Vector2.zero;
+                boardZone.offsetMax = Vector2.zero;
+            }
+
+            RectTransform boardFrame = FindInRoot("BoardFrame") as RectTransform;
+            if (boardFrame != null)
+            {
+                float width = screenRoot.rect.width > 100f ? screenRoot.rect.width : 720f;
+                float boardSize = Mathf.Min(692f, width - 22f);
+                boardFrame.sizeDelta = new Vector2(boardSize, boardSize);
+                ApplyPanelV7(boardFrame.GetComponent<Image>(), LumaBayArtPackV2.PanelLarge, PanelTint);
+            }
 
             RectTransform tray = FindInRoot("BoosterTray") as RectTransform;
-            if (tray == null) tray = FindInRoot("BoosterRow") as RectTransform;
-            if (tray == null) tray = FindInRoot("BoostersRow") as RectTransform;
-            if (tray == null) return;
-
-            SetPreferredV6(tray, 138f);
-            SetSolidPanelV6(tray.GetComponent<Image>(), new Color(0.006f, 0.045f, 0.072f, 0.97f), "v6_booster_tray", 24);
-
-            HorizontalLayoutGroup row = tray.GetComponent<HorizontalLayoutGroup>();
-            if (row != null)
+            if (tray != null)
             {
-                row.padding = new RectOffset(8, 8, 8, 8);
-                row.spacing = 7f;
-                row.childAlignment = TextAnchor.MiddleCenter;
-                row.childControlWidth = true;
-                row.childControlHeight = true;
-                row.childForceExpandWidth = true;
-                row.childForceExpandHeight = false;
-            }
+                tray.anchorMin = new Vector2(0.015f, 0.018f);
+                tray.anchorMax = new Vector2(0.985f, 0.172f);
+                tray.offsetMin = Vector2.zero;
+                tray.offsetMax = Vector2.zero;
+                ApplyPanelV7(tray.GetComponent<Image>(), LumaBayArtPackV2.BoosterTray, Color.white);
 
-            foreach (Button booster in tray.GetComponentsInChildren<Button>(true))
-            {
-                LayoutElement element = booster.GetComponent<LayoutElement>();
-                if (element == null) element = booster.gameObject.AddComponent<LayoutElement>();
-                element.minWidth = 0f;
-                element.preferredWidth = 110f;
-                element.flexibleWidth = 1f;
-                element.minHeight = 118f;
-                element.preferredHeight = 118f;
-                element.flexibleHeight = 0f;
-                SetSolidPanelV6(booster.GetComponent<Image>(), ButtonDark, "v6_booster_" + booster.GetInstanceID(), 18);
-
-                RectTransform premiumIcon = booster.transform.Find("PremiumBoosterIcon") as RectTransform;
-                if (premiumIcon != null)
+                HorizontalLayoutGroup row = tray.GetComponent<HorizontalLayoutGroup>();
+                if (row != null)
                 {
-                    premiumIcon.anchorMin = new Vector2(0.16f, 0.24f);
-                    premiumIcon.anchorMax = new Vector2(0.84f, 0.90f);
-                    premiumIcon.offsetMin = Vector2.zero;
-                    premiumIcon.offsetMax = Vector2.zero;
+                    row.padding = new RectOffset(27, 27, 20, 18);
+                    row.spacing = 6f;
+                    row.childAlignment = TextAnchor.MiddleCenter;
+                    row.childControlWidth = true;
+                    row.childControlHeight = true;
+                    row.childForceExpandWidth = true;
+                    row.childForceExpandHeight = true;
                 }
 
-                foreach (Text label in booster.GetComponentsInChildren<Text>(true))
+                foreach (Button booster in tray.GetComponentsInChildren<Button>(true))
                 {
-                    bool price = label.text != null && label.text.Contains("◆");
-                    label.gameObject.SetActive(price);
-                    if (!price) continue;
-                    label.color = GoldText;
-                    label.fontSize = 14;
-                    label.alignment = TextAnchor.MiddleCenter;
-                    label.rectTransform.anchorMin = new Vector2(0.08f, 0.02f);
-                    label.rectTransform.anchorMax = new Vector2(0.92f, 0.25f);
-                    label.rectTransform.offsetMin = Vector2.zero;
-                    label.rectTransform.offsetMax = Vector2.zero;
+                    Image buttonImage = booster.GetComponent<Image>();
+                    if (buttonImage != null)
+                    {
+                        buttonImage.sprite = null;
+                        buttonImage.color = new Color(1f, 1f, 1f, 0.001f);
+                    }
+
+                    LayoutElement element = booster.GetComponent<LayoutElement>();
+                    if (element == null) element = booster.gameObject.AddComponent<LayoutElement>();
+                    element.minWidth = 0f;
+                    element.preferredWidth = 112f;
+                    element.flexibleWidth = 1f;
+                    element.minHeight = 102f;
+                    element.preferredHeight = 102f;
+                    element.flexibleHeight = 1f;
+
+                    RectTransform premiumIcon = booster.transform.Find("PremiumBoosterIcon") as RectTransform;
+                    if (premiumIcon != null)
+                    {
+                        premiumIcon.anchorMin = new Vector2(0.13f, 0.24f);
+                        premiumIcon.anchorMax = new Vector2(0.87f, 0.91f);
+                        premiumIcon.offsetMin = Vector2.zero;
+                        premiumIcon.offsetMax = Vector2.zero;
+                    }
+
+                    foreach (Text label in booster.GetComponentsInChildren<Text>(true))
+                    {
+                        bool price = label.text != null && label.text.Contains("◆");
+                        label.gameObject.SetActive(price);
+                        if (!price) continue;
+                        label.color = GoldText;
+                        label.fontSize = 15;
+                        label.alignment = TextAnchor.MiddleCenter;
+                        label.rectTransform.anchorMin = new Vector2(0.05f, 0.01f);
+                        label.rectTransform.anchorMax = new Vector2(0.95f, 0.24f);
+                        label.rectTransform.offsetMin = Vector2.zero;
+                        label.rectTransform.offsetMax = Vector2.zero;
+                    }
                 }
             }
+
+            StyleRoleButtonsV7(screenRoot);
         }
 
-        private void StylePanelByNameV6(string name, Color color, float height)
+        private void StyleRoleButtonsV7(Transform root)
         {
-            RectTransform rect = FindInRoot(name) as RectTransform;
-            if (rect == null) return;
-            SetPreferredV6(rect, height);
-            SetSolidPanelV6(rect.GetComponent<Image>(), color, "v6_" + name, 24);
+            if (root == null) return;
+            foreach (ButtonRole marker in root.GetComponentsInChildren<ButtonRole>(true))
+            {
+                Button button = marker.GetComponent<Button>();
+                if (button == null) continue;
+
+                switch (marker.Id)
+                {
+                    case ButtonRoleId.Play:
+                        StyleButtonV6(button, true, 88f);
+                        break;
+                    case ButtonRoleId.StartLevel:
+                        StyleButtonV6(button, true, 82f);
+                        break;
+                    case ButtonRoleId.Restore:
+                        StyleButtonV6(button, button.interactable, 72f);
+                        break;
+                    case ButtonRoleId.Levels:
+                    case ButtonRoleId.Settings:
+                        StyleButtonV6(button, false, 74f);
+                        break;
+                    case ButtonRoleId.Back:
+                        StyleButtonV6(button, false, 58f);
+                        break;
+                    case ButtonRoleId.SettingToggle:
+                    case ButtonRoleId.Language:
+                        StyleButtonV6(button, false, 70f);
+                        break;
+                    case ButtonRoleId.ResetProgress:
+                        StyleButtonV6(button, false, 64f, new Color(0.62f, 0.20f, 0.24f, 1f));
+                        break;
+                    case ButtonRoleId.ModalPrimary:
+                        StyleButtonV6(button, true, 78f);
+                        break;
+                    case ButtonRoleId.ModalSecondary:
+                        StyleButtonV6(button, false, 64f);
+                        break;
+                }
+            }
         }
 
         private static void StyleButtonV6(Button button, bool primary, float height, Color? overrideColor = null)
         {
             if (button == null) return;
+            ButtonRole marker = button.GetComponent<ButtonRole>();
+            if (marker != null && (marker.Id == ButtonRoleId.LevelCard || marker.Id == ButtonRoleId.Booster)) return;
+
             SetPreferredV6(button.transform as RectTransform, height);
-            SetSolidPanelV6(button.GetComponent<Image>(), overrideColor ?? (primary ? ButtonPrimary : ButtonDark),
-                "v6_button_" + button.GetInstanceID(), 22);
+
+            Sprite sprite;
+            if (marker != null && marker.Id == ButtonRoleId.Back)
+                sprite = LumaBayArtPackV2.CompactButton;
+            else
+                sprite = primary ? LumaBayArtPackV2.PrimaryButton : LumaBayArtPackV2.SecondaryButton;
+
+            Image image = button.GetComponent<Image>();
+            if (image != null)
+            {
+                if (sprite != null) image.sprite = sprite;
+                image.type = Image.Type.Sliced;
+                image.preserveAspect = false;
+                image.color = overrideColor ?? (primary ? Color.white : SecondaryTint);
+            }
 
             Text label = button.GetComponentInChildren<Text>(true);
             if (label != null)
             {
                 label.gameObject.SetActive(true);
                 label.color = Color.white;
-                label.fontSize = primary ? 28 : 22;
+                label.fontSize = primary ? 27 : 21;
                 label.resizeTextForBestFit = true;
-                label.resizeTextMinSize = 16;
-                label.resizeTextMaxSize = primary ? 28 : 22;
+                label.resizeTextMinSize = 15;
+                label.resizeTextMaxSize = primary ? 27 : 21;
             }
         }
 
-        private static void SetSolidPanelV6(Image image, Color color, string key, int radius)
+        private static void ApplyPanelV7(Image image, Sprite sprite, Color tint)
         {
             if (image == null) return;
-            image.sprite = ProceduralArt.Rounded(key, Color.white, radius);
+            if (sprite != null) image.sprite = sprite;
             image.type = Image.Type.Sliced;
-            image.color = color;
+            image.color = tint;
             image.preserveAspect = false;
         }
 
@@ -437,20 +562,6 @@ namespace LumaBay
             element.minHeight = height;
             element.preferredHeight = height;
             element.flexibleHeight = 0f;
-        }
-
-        private static string StripRichTextV6(string value)
-        {
-            if (string.IsNullOrEmpty(value)) return string.Empty;
-            var builder = new System.Text.StringBuilder(value.Length);
-            bool insideTag = false;
-            foreach (char character in value)
-            {
-                if (character == '<') { insideTag = true; continue; }
-                if (character == '>') { insideTag = false; continue; }
-                if (!insideTag) builder.Append(character);
-            }
-            return builder.ToString().Trim();
         }
     }
 }
