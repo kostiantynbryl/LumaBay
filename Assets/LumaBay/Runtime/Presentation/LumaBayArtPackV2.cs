@@ -51,23 +51,25 @@ namespace LumaBay
         public static Sprite MapBackground => GetNamed("backgrounds", 2);
         public static Sprite StoryBackground => GetNamed("backgrounds", 3);
 
-        // ui.png was authored as a fixed 21-element sheet. These mappings match the
-        // actual top-to-bottom/left-to-right importer order and intentionally avoid
-        // the baked English "Moves 16" panel at ui_01.
+        // Exact semantic mapping for the authored 21-element ui.png sheet.
+        // ui_01 contains baked English text and is deliberately never used.
         public static Sprite PanelLarge => GetNamed("ui", 0);
-        public static Sprite HeaderPanel => GetNamed("ui", 3);
-        public static Sprite MediumPanel => GetNamed("ui", 5);
-        public static Sprite PrimaryButton => GetNamed("ui", 6);
+        public static Sprite HeaderPanel => GetNamed("ui", 2);
+        public static Sprite MediumPanel => GetNamed("ui", 3);
+        public static Sprite PrimaryButton => GetNamed("ui", 4);
+        public static Sprite SecondaryButton => GetNamed("ui", 5);
+        public static Sprite CompactButton => GetNamed("ui", 6);
         public static Sprite GoalsPanel => GetNamed("ui", 7);
         public static Sprite ProgressDecor => GetNamed("ui", 8);
-        public static Sprite CompactButton => GetNamed("ui", 16);
+        public static Sprite BackButton => GetNamed("ui", 15);
+        public static Sprite CompactPanel => GetNamed("ui", 16);
         public static Sprite ProgressTrack => GetNamed("ui", 17);
         public static Sprite TaskPanel => GetNamed("ui", 18);
-        public static Sprite SecondaryButton => GetNamed("ui", 19);
+        public static Sprite BottomNavigation => GetNamed("ui", 19);
         public static Sprite BoosterTray => GetNamed("ui", 20);
 
-        // V2 has one authored complete progress-bar frame rather than a separate fill.
-        // Returning null here makes the compatibility facade use its dedicated fill asset.
+        // The V2 sheet has one complete progress frame. The fill remains a dedicated
+        // compatibility asset so its width can represent actual progress.
         public static Sprite ProgressFill => null;
 
         public static Sprite UiBoosterMedallion(int index)
