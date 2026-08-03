@@ -13,6 +13,10 @@ Recordings/
 Assets/LumaBay/Generated/
 Assets/LumaBay/Resources/
 
+# Keep the authored Premium Art Pack V2 in Git
+!Assets/LumaBay/Resources/ArtPackV2/
+!Assets/LumaBay/Resources/ArtPackV2/**
+
 # IDE
 .vs/
 .vscode/
