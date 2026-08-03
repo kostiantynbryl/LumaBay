@@ -9,30 +9,33 @@ namespace LumaBay
         private static readonly Dictionary<string, AudioClip> AudioCache = new Dictionary<string, AudioClip>();
         private static readonly Dictionary<string, Sprite> TintedFrameCache = new Dictionary<string, Sprite>();
 
-        public static bool IsAvailable => LoadSprite("ui/panel_glass") != null;
+        public static bool IsAvailable => LumaBayArtPackV2.IsAvailable || LoadSprite("ui/panel_glass") != null;
 
-        public static Sprite Background => LoadSprite("backgrounds/coastal_sunset");
-        public static Sprite Panel => LoadSprite("ui/panel_glass");
-        public static Sprite ButtonPrimary => LoadSprite("ui/button_primary");
-        public static Sprite ButtonSecondary => LoadSprite("ui/button_secondary");
-        public static Sprite BoosterCard => LoadSprite("ui/booster_card");
-        public static Sprite GoalChip => LoadSprite("ui/goal_chip");
-        public static Sprite ProgressTrack => LoadSprite("ui/progress_track");
-        public static Sprite ProgressFill => LoadSprite("ui/progress_fill");
+        public static Sprite Background => First(LumaBayArtPackV2.GameplayBackground, LoadSprite("backgrounds/coastal_sunset"));
+        public static Sprite MainMenuBackground => First(LumaBayArtPackV2.MainMenuBackground, Background);
+        public static Sprite MapBackground => First(LumaBayArtPackV2.MapBackground, Background);
+        public static Sprite StoryBackground => First(LumaBayArtPackV2.StoryBackground, Background);
+        public static Sprite Panel => First(LumaBayArtPackV2.PanelLarge, LoadSprite("ui/panel_glass"));
+        public static Sprite ButtonPrimary => First(LumaBayArtPackV2.PrimaryButton, LoadSprite("ui/button_primary"));
+        public static Sprite ButtonSecondary => First(LumaBayArtPackV2.SecondaryButton, LoadSprite("ui/button_secondary"));
+        public static Sprite BoosterCard => First(LumaBayArtPackV2.BoosterTray, LoadSprite("ui/booster_card"));
+        public static Sprite GoalChip => First(LumaBayArtPackV2.GoalsPanel, LoadSprite("ui/goal_chip"));
+        public static Sprite ProgressTrack => First(LumaBayArtPackV2.ProgressTrack, LoadSprite("ui/progress_track"));
+        public static Sprite ProgressFill => First(LumaBayArtPackV2.ProgressFill, LoadSprite("ui/progress_fill"));
 
         public static Sprite Piece(PieceKind kind)
         {
-            return LoadSprite($"pieces/piece_{kind.ToString().ToLowerInvariant()}");
+            return First(LumaBayArtPackV2.Piece(kind), LoadSprite($"pieces/piece_{kind.ToString().ToLowerInvariant()}"));
         }
 
         public static Sprite Booster(string id)
         {
-            return LoadSprite($"boosters/{id}");
+            return First(LumaBayArtPackV2.Booster(id), LoadSprite($"boosters/{id}"));
         }
 
         public static Sprite LighthouseState(int state)
         {
-            return LoadSprite($"lighthouse/lighthouse_{Mathf.Clamp(state, 0, 31):00}");
+            return First(LumaBayArtPackV2.LighthouseState(state), LoadSprite($"lighthouse/lighthouse_{Mathf.Clamp(state, 0, 31):00}"));
         }
 
         public static AudioClip Audio(string id)
@@ -86,6 +89,7 @@ namespace LumaBay
         {
             SpriteCache.Clear();
             AudioCache.Clear();
+            LumaBayArtPackV2.Clear();
             foreach (Sprite sprite in TintedFrameCache.Values)
             {
                 if (sprite == null) continue;
@@ -94,6 +98,11 @@ namespace LumaBay
                 if (texture != null) Object.Destroy(texture);
             }
             TintedFrameCache.Clear();
+        }
+
+        private static Sprite First(Sprite preferred, Sprite fallback)
+        {
+            return preferred != null ? preferred : fallback;
         }
 
         private static Sprite LoadSprite(string relativePath)
