@@ -8,6 +8,8 @@ Install Unity `6000.3.18f1` with:
 - Android SDK & NDK Tools;
 - OpenJDK.
 
+If the build script reports that Android is unsupported, open Unity Hub, select the editor installation, choose **Add modules**, and install all three Android components above.
+
 ## Prepare the project
 
 Switch to:
@@ -51,10 +53,18 @@ After the Console has no red errors, select:
 Luma Bay → Build Android Alpha
 ```
 
+The build command now checks that Android Build Support is installed and switches the active editor platform to Android when necessary.
+
 Output:
 
 ```text
 Builds/Android/LumaBay-0.1.2-alpha.apk
+```
+
+Diagnostic report:
+
+```text
+Builds/Android/LumaBay-0.1.2-alpha-build-report.txt
 ```
 
 Configuration:
@@ -71,13 +81,16 @@ Configuration:
 
 ```powershell
 & "C:\Program Files\Unity\Hub\Editor\6000.3.18f1\Editor\Unity.exe" `
-  -batchmode -quit `
+  -batchmode -nographics -quit `
+  -buildTarget Android `
   -projectPath "$PWD" `
   -executeMethod LumaBay.Editor.LumaBayBuildScript.BuildAndroid `
-  -logFile "Builds/unity-build.log"
+  -logFile "Builds/Android/LumaBay-0.1.2-alpha-build.log"
 ```
 
-A command-line build should be run only after the generated Resources assets exist from one editor import.
+The `-buildTarget Android` argument is required in batch mode. Unity cannot switch the active build target from inside an executing batch-mode method.
+
+A command-line build should be run only after the generated Resources assets exist from one editor import. The repository root also contains `Build-Android-Alpha.bat`, which supplies the correct target and prints the end of the Unity log when a build fails.
 
 ## Install without deleting progress
 
