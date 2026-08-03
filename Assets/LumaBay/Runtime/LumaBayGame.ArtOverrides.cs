@@ -25,11 +25,11 @@ namespace LumaBay
             if (signature == artOverrideSignature) return;
             artOverrideSignature = signature;
 
-            // Roles are assigned first, then the authored V2 layout is applied exactly once.
-            // This removes the previous 0.12-second tug-of-war between procedural and V2 art.
+            // One deterministic presentation pipeline per newly created screen/modal.
             ApplyButtonRoles();
             ApplyStableInterfaceV4();
             ApplyBoosterArtwork(screenRoot);
+            ApplyFinalLayoutV8();
             ApplyLighthouseBeam(screenRoot);
         }
 
