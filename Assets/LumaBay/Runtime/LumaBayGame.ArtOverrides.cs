@@ -17,6 +17,7 @@ namespace LumaBay
             }
 
             ApplyStableInterfaceV4();
+            ApplyButtonRoles();
 
             int childCount = screenRoot.childCount;
             int firstId = childCount > 0 ? screenRoot.GetChild(0).GetInstanceID() : 0;
