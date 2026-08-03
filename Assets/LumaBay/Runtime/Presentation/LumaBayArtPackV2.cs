@@ -9,7 +9,11 @@ namespace LumaBay
         private static readonly Dictionary<string, Sprite> Named = new Dictionary<string, Sprite>();
         private static readonly HashSet<string> MissingLogged = new HashSet<string>();
 
-        public static bool IsAvailable => GetNamed("tiles", 0) != null && GetNamed("ui", 20) != null;
+        public static bool IsAvailable =>
+            LumaBayColorfulUi.IsAvailable ||
+            (GetNamed("tiles", 0) != null && GetNamed("ui", 20) != null);
+
+        public static bool IsColorfulUiActive => LumaBayColorfulUi.IsAvailable;
 
         public static Sprite Piece(PieceKind kind)
         {
@@ -51,29 +55,28 @@ namespace LumaBay
         public static Sprite MapBackground => GetNamed("backgrounds", 2);
         public static Sprite StoryBackground => GetNamed("backgrounds", 3);
 
-        // Exact semantic mapping for the authored 21-element ui.png sheet.
-        // ui_01 contains baked English text and is deliberately never used.
-        public static Sprite PanelLarge => GetNamed("ui", 0);
-        public static Sprite HeaderPanel => GetNamed("ui", 2);
-        public static Sprite MediumPanel => GetNamed("ui", 3);
-        public static Sprite PrimaryButton => GetNamed("ui", 4);
-        public static Sprite SecondaryButton => GetNamed("ui", 5);
-        public static Sprite CompactButton => GetNamed("ui", 6);
-        public static Sprite GoalsPanel => GetNamed("ui", 7);
-        public static Sprite ProgressDecor => GetNamed("ui", 8);
-        public static Sprite BackButton => GetNamed("ui", 15);
-        public static Sprite CompactPanel => GetNamed("ui", 16);
-        public static Sprite ProgressTrack => GetNamed("ui", 17);
-        public static Sprite TaskPanel => GetNamed("ui", 18);
-        public static Sprite BottomNavigation => GetNamed("ui", 19);
-        public static Sprite BoosterTray => GetNamed("ui", 20);
-
-        // The V2 sheet has one complete progress frame. The fill remains a dedicated
-        // compatibility asset so its width can represent actual progress.
-        public static Sprite ProgressFill => null;
+        // Colorful UI Kit is the preferred UI source when a configured theme asset exists.
+        // The authored Art Pack V2 remains the automatic fallback for clean checkouts and CI.
+        public static Sprite PanelLarge => LumaBayColorfulUi.PanelLarge ?? GetNamed("ui", 0);
+        public static Sprite HeaderPanel => LumaBayColorfulUi.HeaderPanel ?? GetNamed("ui", 2);
+        public static Sprite MediumPanel => LumaBayColorfulUi.MediumPanel ?? GetNamed("ui", 3);
+        public static Sprite PrimaryButton => LumaBayColorfulUi.PrimaryButton ?? GetNamed("ui", 4);
+        public static Sprite SecondaryButton => LumaBayColorfulUi.SecondaryButton ?? GetNamed("ui", 5);
+        public static Sprite CompactButton => LumaBayColorfulUi.CompactButton ?? GetNamed("ui", 6);
+        public static Sprite GoalsPanel => LumaBayColorfulUi.GoalsPanel ?? GetNamed("ui", 7);
+        public static Sprite ProgressDecor => LumaBayColorfulUi.ProgressDecor ?? GetNamed("ui", 8);
+        public static Sprite BackButton => LumaBayColorfulUi.BackButton ?? GetNamed("ui", 15);
+        public static Sprite CompactPanel => LumaBayColorfulUi.CompactPanel ?? GetNamed("ui", 16);
+        public static Sprite ProgressTrack => LumaBayColorfulUi.ProgressTrack ?? GetNamed("ui", 17);
+        public static Sprite TaskPanel => LumaBayColorfulUi.TaskPanel ?? GetNamed("ui", 18);
+        public static Sprite BottomNavigation => LumaBayColorfulUi.BottomNavigation ?? GetNamed("ui", 19);
+        public static Sprite BoosterTray => LumaBayColorfulUi.BoosterTray ?? GetNamed("ui", 20);
+        public static Sprite ProgressFill => LumaBayColorfulUi.ProgressFill;
+        public static Sprite IconPlate => LumaBayColorfulUi.IconPlate ?? CompactButton;
 
         public static Sprite UiBoosterMedallion(int index)
         {
+            if (LumaBayColorfulUi.IconPlate != null) return LumaBayColorfulUi.IconPlate;
             return index >= 0 && index < 7 ? GetNamed("ui", 9 + index) : null;
         }
 
@@ -82,6 +85,12 @@ namespace LumaBay
 
         public static Sprite Get(string sheet, int index)
         {
+            if (sheet == "ui")
+            {
+                Sprite themed = GetThemedUiSprite(index);
+                if (themed != null) return themed;
+            }
+
             return GetNamed(sheet, index);
         }
 
@@ -93,6 +102,12 @@ namespace LumaBay
             int separator = name.LastIndexOf('_');
             if (separator <= 0) return null;
             string sheet = name.Substring(0, separator);
+            if (sheet == "ui" && int.TryParse(name.Substring(separator + 1), out int index))
+            {
+                Sprite themed = GetThemedUiSprite(index);
+                if (themed != null) return themed;
+            }
+
             LoadSheet(sheet);
             return Named.TryGetValue(name, out cached) ? cached : null;
         }
@@ -108,6 +123,32 @@ namespace LumaBay
             Sheets.Clear();
             Named.Clear();
             MissingLogged.Clear();
+            LumaBayColorfulUi.Reload();
+        }
+
+        private static Sprite GetThemedUiSprite(int index)
+        {
+            if (!LumaBayColorfulUi.IsAvailable) return null;
+
+            return index switch
+            {
+                0 => LumaBayColorfulUi.PanelLarge,
+                2 => LumaBayColorfulUi.HeaderPanel,
+                3 => LumaBayColorfulUi.MediumPanel,
+                4 => LumaBayColorfulUi.PrimaryButton,
+                5 => LumaBayColorfulUi.SecondaryButton,
+                6 => LumaBayColorfulUi.CompactButton,
+                7 => LumaBayColorfulUi.GoalsPanel,
+                8 => LumaBayColorfulUi.ProgressDecor,
+                >= 9 and <= 14 => LumaBayColorfulUi.IconPlate,
+                15 => LumaBayColorfulUi.BackButton,
+                16 => LumaBayColorfulUi.CompactPanel,
+                17 => LumaBayColorfulUi.ProgressTrack,
+                18 => LumaBayColorfulUi.TaskPanel,
+                19 => LumaBayColorfulUi.BottomNavigation,
+                20 => LumaBayColorfulUi.BoosterTray,
+                _ => null
+            };
         }
 
         private static Sprite GetNamed(string sheet, int index)
