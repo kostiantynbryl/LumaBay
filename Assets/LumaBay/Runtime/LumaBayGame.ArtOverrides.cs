@@ -10,7 +10,9 @@ namespace LumaBay
 
         private void RefreshArtOverridesIfNeeded()
         {
-            if (screenRoot == null || !LumaBayArtPack.IsAvailable)
+            PolishTransientLayers();
+
+            if (screenRoot == null)
             {
                 artOverrideSignature = int.MinValue;
                 return;
@@ -21,6 +23,10 @@ namespace LumaBay
             int signature = childCount * 486187739 ^ firstId ^ (save != null ? save.LighthouseVisualState * 397 : 0);
             if (signature == artOverrideSignature) return;
             artOverrideSignature = signature;
+
+            ApplyScreenPolish(screenRoot);
+            if (!LumaBayArtPack.IsAvailable) return;
+
             ApplyBoosterArtwork(screenRoot);
             ApplyLighthouseBeam(screenRoot);
         }
