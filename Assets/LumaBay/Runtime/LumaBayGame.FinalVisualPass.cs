@@ -168,7 +168,7 @@ namespace LumaBay
                 Button button = card.GetComponent<Button>();
                 bool unlocked = button == null || button.interactable;
                 int levelId = i + 1;
-                int stars = save != null && save.StarsByLevel != null && i < save.StarsByLevel.Length
+                int stars = save != null && save.StarsByLevel != null && i < save.StarsByLevel.Count
                     ? save.StarsByLevel[i]
                     : 0;
 
