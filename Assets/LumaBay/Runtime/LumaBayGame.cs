@@ -48,6 +48,7 @@ namespace LumaBay
             RefreshBoardPresentationIfNeeded();
             RefreshArtOverridesIfNeeded();
             UpdateHintAnimation();
+            ApplyLayoutRepairV3IfNeeded();
         }
 
         private void OnApplicationPause(bool pause)
