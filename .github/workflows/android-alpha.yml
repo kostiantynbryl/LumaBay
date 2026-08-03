@@ -1,0 +1,75 @@
+name: Luma Bay Android Alpha
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop/0.1.2-alpha
+    paths:
+      - 'Assets/**'
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/workflows/android-alpha.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: luma-bay-android-alpha-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Validate and build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+            Library-
+
+      - name: Build Android alpha
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: auto
+          targetPlatform: Android
+          buildMethod: LumaBay.Editor.LumaBayBuildScript.BuildAndroid
+          androidExportType: androidPackage
+          allowDirtyBuild: true
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LumaBay-0.1.2-alpha-APK
+          path: Builds/Android/LumaBay-0.1.2-alpha.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: LumaBay-build-logs
+          path: |
+            **/*.log
+            **/Editor.log
+          if-no-files-found: ignore
+          retention-days: 7
