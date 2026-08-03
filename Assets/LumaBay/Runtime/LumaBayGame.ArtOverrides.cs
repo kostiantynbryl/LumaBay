@@ -16,16 +16,19 @@ namespace LumaBay
                 return;
             }
 
-            ApplyStableInterfaceV4();
-            ApplyButtonRoles();
-
             int childCount = screenRoot.childCount;
             int firstId = childCount > 0 ? screenRoot.GetChild(0).GetInstanceID() : 0;
-            int signature = childCount * 486187739 ^ firstId ^
+            Transform modal = canvas != null ? canvas.transform.Find("ModalOverlay") : null;
+            int modalId = modal != null ? modal.GetInstanceID() : 0;
+            int signature = childCount * 486187739 ^ firstId ^ modalId ^
                             (save != null ? save.LighthouseVisualState * 397 : 0);
             if (signature == artOverrideSignature) return;
             artOverrideSignature = signature;
 
+            // Roles are assigned first, then the authored V2 layout is applied exactly once.
+            // This removes the previous 0.12-second tug-of-war between procedural and V2 art.
+            ApplyButtonRoles();
+            ApplyStableInterfaceV4();
             ApplyBoosterArtwork(screenRoot);
             ApplyLighthouseBeam(screenRoot);
         }
@@ -116,6 +119,12 @@ namespace LumaBay
 
         private static string ResolveBoosterId(string objectName, Text[] labels)
         {
+            if (objectName.Contains("lightning", StringComparison.OrdinalIgnoreCase)) return "lightning";
+            if (objectName.Contains("anchor", StringComparison.OrdinalIgnoreCase)) return "anchor";
+            if (objectName.Contains("shuffle", StringComparison.OrdinalIgnoreCase)) return "shuffle";
+            if (objectName.Contains("extra_moves", StringComparison.OrdinalIgnoreCase)) return "extra_moves";
+            if (objectName.Contains("harpoon", StringComparison.OrdinalIgnoreCase)) return "harpoon";
+
             string aggregate = objectName;
             foreach (Text label in labels) aggregate += " " + label.text;
             if (aggregate.IndexOf("200", StringComparison.Ordinal) >= 0) return "lightning";
