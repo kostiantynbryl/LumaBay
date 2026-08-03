@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,209 +5,143 @@ namespace LumaBay
 {
     public sealed partial class LumaBayGame
     {
-        private float nextLayoutRepairV3;
+        private float nextStableInterfacePass;
 
-        private void ApplyLayoutRepairV3IfNeeded()
+        private void ApplyStableInterfaceV4()
         {
-            if (screenRoot == null || Time.unscaledTime < nextLayoutRepairV3) return;
-            nextLayoutRepairV3 = Time.unscaledTime + 0.15f;
+            if (screenRoot == null || Time.unscaledTime < nextStableInterfacePass) return;
+            nextStableInterfacePass = Time.unscaledTime + 0.12f;
 
-            if (FindInRoot("MainHero") != null) RepairMainMenuV3();
-            if (FindInRoot("LighthouseMetaCard") != null) RepairMapV3();
-            if (FindInRoot("SettingsHeader") != null) RepairSettingsV3();
-            if (FindInRoot("LevelScroll") != null) RepairLevelSelectorV3();
-            if (FindInRoot("BoardFrame") != null || FindInRoot("BoardGrid") != null) RepairGameplayV3();
+            LumaBayPremiumCompositionV2 legacy = Object.FindFirstObjectByType<LumaBayPremiumCompositionV2>();
+            if (legacy != null) legacy.enabled = false;
+
+            ApplyStableBackgroundV4();
+            ApplyStablePanelsV4();
+            RepairLevelSelectorV4();
+            RepairGameplayBottomBarV4();
+            RepairModalV4();
         }
 
-        private void RepairMainMenuV3()
+        private void ApplyStableBackgroundV4()
         {
-            RectTransform vertical = FindInRoot("VerticalScreen") as RectTransform;
-            VerticalLayoutGroup layout = vertical != null ? vertical.GetComponent<VerticalLayoutGroup>() : null;
-            if (layout != null)
-            {
-                layout.padding = new RectOffset(28, 28, 20, 24);
-                layout.spacing = 12f;
-            }
+            Transform backgroundTransform = canvas != null ? canvas.transform.Find("Background") : null;
+            Image background = backgroundTransform != null ? backgroundTransform.GetComponent<Image>() : null;
+            if (background == null) return;
 
-            SetPreferredV3(FindInRoot("LogoBlock") as RectTransform, 112f);
-            SetPreferredV3(FindInRoot("MainHero") as RectTransform, 540f);
-            SetPreferredV3(FindInRoot("MainSecondaryRow") as RectTransform, 104f);
+            Sprite selected;
+            if (FindInRoot("BoardFrame") != null || FindInRoot("BoardGrid") != null)
+                selected = LumaBayArtPackV2.GameplayBackground;
+            else if (FindInRoot("MapHeader") != null || FindInRoot("LevelScroll") != null)
+                selected = LumaBayArtPackV2.MapBackground;
+            else if (FindInRoot("SettingsHeader") != null)
+                selected = LumaBayArtPackV2.StoryBackground;
+            else
+                selected = LumaBayArtPackV2.MainMenuBackground;
 
-            Button[] buttons = screenRoot.GetComponentsInChildren<Button>(true);
-            foreach (Button button in buttons)
-            {
-                Text label = button.GetComponentInChildren<Text>(true);
-                if (label == null) continue;
-                string value = StripRichTextV3(label.text).ToUpperInvariant();
-                bool play = value.Contains("ИГРАТЬ") || value == "PLAY";
-                bool secondary = value.Contains("УРОВНИ") || value.Contains("LEVELS") ||
-                                 value.Contains("НАСТРОЙКИ") || value.Contains("SETTINGS");
-                if (!play && !secondary) continue;
-
-                SetPreferredV3(button.transform as RectTransform, play ? 112f : 96f);
-                label.fontSize = play ? 30 : 25;
-                label.resizeTextForBestFit = true;
-                label.resizeTextMinSize = 20;
-                label.resizeTextMaxSize = play ? 30 : 25;
-            }
+            if (selected != null) background.sprite = selected;
+            background.color = Color.white;
+            background.preserveAspect = false;
         }
 
-        private void RepairMapV3()
+        private void ApplyStablePanelsV4()
         {
-            RectTransform vertical = FindInRoot("VerticalScreen") as RectTransform;
-            VerticalLayoutGroup layout = vertical != null ? vertical.GetComponent<VerticalLayoutGroup>() : null;
-            if (layout != null)
+            Image[] images = screenRoot.GetComponentsInChildren<Image>(true);
+            foreach (Image image in images)
             {
-                layout.padding = new RectOffset(20, 20, 14, 18);
-                layout.spacing = 10f;
-            }
+                if (image == null) continue;
+                string objectName = image.name;
+                if (objectName == "Piece" || objectName == "PremiumBoosterIcon" ||
+                    objectName == "PremiumLighthouseVisual" || objectName == "LevelTargetIcon" ||
+                    objectName.StartsWith("Cell_") || objectName.Contains("Obstacle"))
+                    continue;
 
-            SetPreferredV3(FindInRoot("MapHeader") as RectTransform, 92f);
-            SetPreferredV3(FindInRoot("LighthouseMetaCard") as RectTransform, 540f);
-            SetPreferredV3(FindInRoot("TaskCard") as RectTransform, 170f);
-            SetPreferredV3(FindInRoot("MetaProgressRow") as RectTransform, 46f);
-
-            Button[] buttons = screenRoot.GetComponentsInChildren<Button>(true);
-            foreach (Button button in buttons)
-            {
-                Text label = button.GetComponentInChildren<Text>(true);
-                if (label == null) continue;
-                string value = StripRichTextV3(label.text).ToUpperInvariant();
-                float height = 0f;
-                if (value.Contains("НАЧАТЬ") || value.Contains("START")) height = 102f;
-                else if (value.Contains("ОТКРОЕТСЯ") || value.Contains("ВОССТ") || value.Contains("RESTORE")) height = 88f;
-                else if (value.Contains("УРОВНИ") || value.Contains("LEVELS")) height = 78f;
-                if (height <= 0f) continue;
-
-                SetPreferredV3(button.transform as RectTransform, height);
-                label.fontSize = height >= 100f ? 27 : 22;
-                label.resizeTextForBestFit = true;
-                label.resizeTextMinSize = 17;
-                label.resizeTextMaxSize = height >= 100f ? 27 : 22;
-            }
-        }
-
-        private void RepairSettingsV3()
-        {
-            RectTransform vertical = FindInRoot("VerticalScreen") as RectTransform;
-            VerticalLayoutGroup screenLayout = vertical != null ? vertical.GetComponent<VerticalLayoutGroup>() : null;
-            if (screenLayout != null)
-            {
-                screenLayout.padding = new RectOffset(22, 22, 18, 22);
-                screenLayout.spacing = 13f;
-            }
-
-            SetPreferredV3(FindInRoot("SettingsHeader") as RectTransform, 94f);
-            SetPreferredV3(FindInRoot("SettingsCard") as RectTransform, 640f);
-
-            Transform card = FindInRoot("SettingsCard");
-            VerticalLayoutGroup cardLayout = card != null ? card.GetComponent<VerticalLayoutGroup>() : null;
-            if (cardLayout != null)
-            {
-                cardLayout.padding = new RectOffset(22, 22, 28, 28);
-                cardLayout.spacing = 18f;
-            }
-
-            Button[] buttons = screenRoot.GetComponentsInChildren<Button>(true);
-            foreach (Button button in buttons)
-            {
-                Text label = button.GetComponentInChildren<Text>(true);
-                if (label == null || label.text == "‹") continue;
-                SetPreferredV3(button.transform as RectTransform, 94f);
-                label.fontSize = 25;
-                label.resizeTextForBestFit = true;
-                label.resizeTextMinSize = 18;
-                label.resizeTextMaxSize = 25;
-            }
-        }
-
-        private void RepairGameplayV3()
-        {
-            SetPreferredV3(FindInRoot("GameplayHeader") as RectTransform, 86f);
-            SetPreferredV3(FindInRoot("TopHud") as RectTransform, 86f);
-            SetPreferredV3(FindInRoot("GoalsPanel") as RectTransform, 110f);
-
-            RectTransform tray = FindInRoot("BoosterTray") as RectTransform;
-            if (tray == null) tray = FindInRoot("BoosterRow") as RectTransform;
-            if (tray == null) tray = FindInRoot("BoostersRow") as RectTransform;
-            if (tray == null) return;
-
-            SetPreferredV3(tray, 174f);
-            HorizontalLayoutGroup row = tray.GetComponent<HorizontalLayoutGroup>();
-            if (row != null)
-            {
-                row.padding = new RectOffset(8, 8, 8, 8);
-                row.spacing = 8f;
-                row.childAlignment = TextAnchor.MiddleCenter;
-                row.childControlWidth = true;
-                row.childControlHeight = true;
-                row.childForceExpandWidth = true;
-                row.childForceExpandHeight = false;
-            }
-
-            Button[] boosters = tray.GetComponentsInChildren<Button>(true);
-            for (int i = 0; i < boosters.Length; i++)
-            {
-                Button booster = boosters[i];
-                RectTransform rect = booster.transform as RectTransform;
-                LayoutElement element = rect != null ? rect.GetComponent<LayoutElement>() : null;
-                if (element == null && rect != null) element = rect.gameObject.AddComponent<LayoutElement>();
-                if (element != null)
+                Button button = image.GetComponent<Button>();
+                if (button != null)
                 {
-                    element.minWidth = 92f;
-                    element.preferredWidth = 116f;
-                    element.flexibleWidth = 1f;
-                    element.minHeight = 146f;
-                    element.preferredHeight = 150f;
-                    element.flexibleHeight = 0f;
-                }
-
-                Image image = booster.GetComponent<Image>();
-                Sprite medallion = LumaBayArtPackV2.MapNode(i == 0 ? 2 : 1);
-                if (image != null && medallion != null)
-                {
-                    image.sprite = medallion;
-                    image.type = Image.Type.Simple;
+                    bool primary = IsPrimaryV4(button);
+                    image.sprite = ProceduralArt.OrnateFrame(primary ? "stable_primary" : "stable_secondary",
+                        primary ? new Color(0.035f, 0.48f, 0.55f, 1f) : new Color(0.025f, 0.19f, 0.29f, 1f), true);
+                    image.type = Image.Type.Sliced;
                     image.preserveAspect = false;
                     image.color = Color.white;
+                    SetButtonHeightV4(button, primary ? 94f : 78f);
+                    continue;
                 }
 
-                Text[] labels = booster.GetComponentsInChildren<Text>(true);
-                foreach (Text label in labels)
-                {
-                    string value = label.text ?? string.Empty;
-                    bool price = value.Contains("◆");
-                    bool icon = !price && value.Length <= 4;
-                    label.gameObject.SetActive(price || icon);
-                    if (price)
-                    {
-                        label.fontSize = 15;
-                        label.color = new Color(1f, 0.86f, 0.48f, 1f);
-                    }
-                    else if (icon)
-                    {
-                        label.fontSize = 30;
-                        label.color = Color.white;
-                    }
-                }
+                if (!IsPanelNameV4(objectName)) continue;
+                Color tone = objectName.Contains("Header")
+                    ? new Color(0.018f, 0.10f, 0.17f, 0.97f)
+                    : new Color(0.018f, 0.095f, 0.15f, 0.94f);
+                image.sprite = ProceduralArt.OrnateFrame("stable_panel_" + objectName, tone, true);
+                image.type = Image.Type.Sliced;
+                image.preserveAspect = false;
+                image.color = Color.white;
             }
         }
 
-        private void RepairLevelSelectorV3()
+        private static bool IsPanelNameV4(string name)
         {
-            RectTransform header = FindInRoot("LevelsHeader") as RectTransform;
-            if (header != null)
-            {
-                header.anchorMin = new Vector2(0.025f, 0.905f);
-                header.anchorMax = new Vector2(0.975f, 0.99f);
-                header.offsetMin = Vector2.zero;
-                header.offsetMax = Vector2.zero;
-            }
+            return name.Contains("Header") || name.Contains("Panel") || name.Contains("Card") ||
+                   name.Contains("Scroll") || name.Contains("HeroCaption") ||
+                   name.Contains("ProgressTrack") || name.Contains("BoosterTray") ||
+                   name.Contains("BoardFrame");
+        }
 
+        private static bool IsPrimaryV4(Button button)
+        {
+            Text label = button.GetComponentInChildren<Text>(true);
+            string value = label != null ? (label.text ?? string.Empty).ToUpperInvariant() : string.Empty;
+            return value.Contains("ИГРАТЬ") || value.Contains("НАЧАТЬ") || value.Contains("СЛЕДУЮЩ") ||
+                   value.Contains("ВОССТ") || value.Contains("PLAY") || value.Contains("START") ||
+                   value.Contains("NEXT") || value.Contains("RESTORE");
+        }
+
+        private static void SetButtonHeightV4(Button button, float baseHeight)
+        {
+            RectTransform rect = button.transform as RectTransform;
+            if (rect == null) return;
+            LayoutElement layout = rect.GetComponent<LayoutElement>();
+            if (layout == null) layout = rect.gameObject.AddComponent<LayoutElement>();
+
+            Text label = button.GetComponentInChildren<Text>(true);
+            string value = label != null ? (label.text ?? string.Empty).ToUpperInvariant() : string.Empty;
+            float height = baseHeight;
+            if (value.Contains("ИГРАТЬ") || value == "PLAY") height = 108f;
+            else if (value.Contains("НАСТРОЙКИ") || value.Contains("УРОВНИ") ||
+                     value.Contains("SETTINGS") || value.Contains("LEVELS")) height = 92f;
+            else if (value.Contains("СБРОС") || value.Contains("RESET")) height = 76f;
+
+            layout.minHeight = height;
+            layout.preferredHeight = height;
+            layout.flexibleHeight = 0f;
+
+            if (label != null)
+            {
+                label.gameObject.SetActive(true);
+                label.fontSize = height >= 100f ? 29 : 23;
+                label.resizeTextForBestFit = true;
+                label.resizeTextMinSize = 17;
+                label.resizeTextMaxSize = height >= 100f ? 29 : 23;
+                label.color = Color.white;
+            }
+        }
+
+        private void RepairLevelSelectorV4()
+        {
             RectTransform root = FindInRoot("LevelScroll") as RectTransform;
             if (root == null) return;
-            root.anchorMin = new Vector2(0.025f, 0.02f);
-            root.anchorMax = new Vector2(0.975f, 0.895f);
+
+            Image rootImage = root.GetComponent<Image>();
+            if (rootImage != null)
+            {
+                rootImage.sprite = ProceduralArt.OrnateFrame("stable_level_scroll",
+                    new Color(0.014f, 0.075f, 0.12f, 0.97f), true);
+                rootImage.type = Image.Type.Sliced;
+                rootImage.color = Color.white;
+            }
+
+            root.anchorMin = new Vector2(0.035f, 0.03f);
+            root.anchorMax = new Vector2(0.965f, 0.89f);
             root.offsetMin = Vector2.zero;
             root.offsetMax = Vector2.zero;
 
@@ -217,14 +150,25 @@ namespace LumaBay
             RectTransform content = viewport != null ? viewport.Find("Content") as RectTransform : null;
             if (scroll == null || viewport == null || content == null) return;
 
-            viewport.gameObject.SetActive(true);
-            content.gameObject.SetActive(true);
-            viewport.localScale = Vector3.one;
-            content.localScale = Vector3.one;
+            Mask mask = viewport.GetComponent<Mask>();
+            if (mask != null) mask.enabled = false;
+            if (viewport.GetComponent<RectMask2D>() == null) viewport.gameObject.AddComponent<RectMask2D>();
+            Image viewportImage = viewport.GetComponent<Image>();
+            if (viewportImage != null) viewportImage.color = new Color(1f, 1f, 1f, 0.001f);
+
             viewport.anchorMin = Vector2.zero;
             viewport.anchorMax = Vector2.one;
-            viewport.offsetMin = new Vector2(14f, 14f);
-            viewport.offsetMax = new Vector2(-14f, -14f);
+            viewport.offsetMin = new Vector2(16f, 16f);
+            viewport.offsetMax = new Vector2(-16f, -16f);
+            viewport.localScale = Vector3.one;
+            viewport.gameObject.SetActive(true);
+
+            content.gameObject.SetActive(true);
+            content.localScale = Vector3.one;
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.anchoredPosition = Vector2.zero;
 
             CanvasGroup contentGroup = content.GetComponent<CanvasGroup>();
             if (contentGroup == null) contentGroup = content.gameObject.AddComponent<CanvasGroup>();
@@ -233,23 +177,18 @@ namespace LumaBay
             contentGroup.blocksRaycasts = true;
 
             const int columns = 3;
-            const float gap = 12f;
+            const float gap = 14f;
             float width = viewport.rect.width > 300f ? viewport.rect.width : 650f;
-            float cellWidth = Mathf.Clamp((width - 52f - gap * 2f) / columns, 170f, 208f);
-            float cellHeight = 152f;
+            float cellWidth = Mathf.Max(168f, (width - 56f - gap * 2f) / columns);
+            float cellHeight = 142f;
             int rows = Mathf.CeilToInt(Mathf.Max(1, content.childCount) / (float)columns);
-
-            content.anchorMin = new Vector2(0f, 1f);
-            content.anchorMax = new Vector2(1f, 1f);
-            content.pivot = new Vector2(0.5f, 1f);
-            content.anchoredPosition = Vector2.zero;
-            content.sizeDelta = new Vector2(0f, rows * cellHeight + Mathf.Max(0, rows - 1) * gap + 44f);
+            content.sizeDelta = new Vector2(0f, 30f + rows * cellHeight + Mathf.Max(0, rows - 1) * gap);
 
             GridLayoutGroup grid = content.GetComponent<GridLayoutGroup>();
             if (grid == null) grid = content.gameObject.AddComponent<GridLayoutGroup>();
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = columns;
-            grid.padding = new RectOffset(14, 14, 18, 24);
+            grid.padding = new RectOffset(14, 14, 16, 18);
             grid.spacing = new Vector2(gap, gap);
             grid.cellSize = new Vector2(cellWidth, cellHeight);
             grid.childAlignment = TextAnchor.UpperCenter;
@@ -272,77 +211,144 @@ namespace LumaBay
 
                 Button button = card.GetComponent<Button>();
                 Image image = card.GetComponent<Image>();
+                bool unlocked = button == null || button.interactable;
                 if (image != null)
                 {
-                    Sprite sprite = button != null && button.interactable
-                        ? LumaBayArtPackV2.SecondaryButton
-                        : LumaBayArtPackV2.MapNode(0);
-                    if (sprite != null) image.sprite = sprite;
+                    image.sprite = ProceduralArt.OrnateFrame("stable_level_card_" + i,
+                        unlocked ? new Color(0.035f, 0.22f, 0.32f, 1f) : new Color(0.04f, 0.08f, 0.11f, 1f), true);
                     image.type = Image.Type.Sliced;
                     image.preserveAspect = false;
-                    image.color = button != null && !button.interactable
-                        ? new Color(0.58f, 0.63f, 0.68f, 0.96f)
-                        : Color.white;
+                    image.color = Color.white;
                 }
 
                 Text label = card.GetComponentInChildren<Text>(true);
                 if (label != null)
                 {
                     label.gameObject.SetActive(true);
-                    label.color = Color.white;
-                    label.fontSize = 25;
-                    label.resizeTextForBestFit = true;
-                    label.resizeTextMinSize = 16;
-                    label.resizeTextMaxSize = 25;
-                    label.rectTransform.anchorMin = new Vector2(0.08f, 0.05f);
-                    label.rectTransform.anchorMax = new Vector2(0.92f, 0.48f);
+                    label.rectTransform.anchorMin = new Vector2(0.05f, 0.02f);
+                    label.rectTransform.anchorMax = new Vector2(0.95f, 0.50f);
                     label.rectTransform.offsetMin = Vector2.zero;
                     label.rectTransform.offsetMax = Vector2.zero;
+                    label.fontSize = 24;
+                    label.resizeTextForBestFit = true;
+                    label.resizeTextMinSize = 15;
+                    label.resizeTextMaxSize = 24;
+                    label.color = unlocked ? Color.white : new Color(0.58f, 0.66f, 0.70f, 1f);
                 }
 
-                Transform icon = card.Find("LevelTargetIcon");
+                RectTransform icon = card.Find("LevelTargetIcon") as RectTransform;
                 if (icon != null)
                 {
                     icon.gameObject.SetActive(true);
-                    RectTransform iconRect = icon as RectTransform;
-                    iconRect.anchorMin = new Vector2(0.30f, 0.48f);
-                    iconRect.anchorMax = new Vector2(0.70f, 0.90f);
-                    iconRect.offsetMin = Vector2.zero;
-                    iconRect.offsetMax = Vector2.zero;
+                    icon.anchorMin = new Vector2(0.31f, 0.49f);
+                    icon.anchorMax = new Vector2(0.69f, 0.91f);
+                    icon.offsetMin = Vector2.zero;
+                    icon.offsetMax = Vector2.zero;
                 }
             }
 
-            scroll.content = content;
             scroll.viewport = viewport;
+            scroll.content = content;
             scroll.horizontal = false;
             scroll.vertical = true;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         }
 
-        private static void SetPreferredV3(RectTransform rect, float height)
+        private void RepairGameplayBottomBarV4()
         {
-            if (rect == null) return;
-            LayoutElement element = rect.GetComponent<LayoutElement>();
-            if (element == null) element = rect.gameObject.AddComponent<LayoutElement>();
-            element.minHeight = height;
-            element.preferredHeight = height;
-            element.flexibleHeight = 0f;
+            RectTransform tray = FindInRoot("BoosterTray") as RectTransform;
+            if (tray == null) tray = FindInRoot("BoosterRow") as RectTransform;
+            if (tray == null) tray = FindInRoot("BoostersRow") as RectTransform;
+            if (tray == null) return;
+
+            LayoutElement trayLayout = tray.GetComponent<LayoutElement>();
+            if (trayLayout == null) trayLayout = tray.gameObject.AddComponent<LayoutElement>();
+            trayLayout.minHeight = 154f;
+            trayLayout.preferredHeight = 154f;
+            trayLayout.flexibleHeight = 0f;
+
+            Image trayImage = tray.GetComponent<Image>();
+            if (trayImage != null)
+            {
+                trayImage.sprite = ProceduralArt.OrnateFrame("stable_booster_tray",
+                    new Color(0.012f, 0.065f, 0.105f, 0.97f), true);
+                trayImage.type = Image.Type.Sliced;
+                trayImage.color = Color.white;
+            }
+
+            HorizontalLayoutGroup row = tray.GetComponent<HorizontalLayoutGroup>();
+            if (row != null)
+            {
+                row.padding = new RectOffset(10, 10, 10, 10);
+                row.spacing = 8f;
+                row.childControlWidth = true;
+                row.childControlHeight = true;
+                row.childForceExpandWidth = true;
+                row.childForceExpandHeight = true;
+            }
+
+            Button[] boosters = tray.GetComponentsInChildren<Button>(true);
+            foreach (Button booster in boosters)
+            {
+                RectTransform rect = booster.transform as RectTransform;
+                LayoutElement element = rect.GetComponent<LayoutElement>();
+                if (element == null) element = rect.gameObject.AddComponent<LayoutElement>();
+                element.minWidth = 0f;
+                element.preferredWidth = 110f;
+                element.flexibleWidth = 1f;
+                element.minHeight = 126f;
+                element.preferredHeight = 126f;
+                element.flexibleHeight = 0f;
+
+                Image image = booster.GetComponent<Image>();
+                if (image != null)
+                {
+                    image.sprite = ProceduralArt.OrnateFrame("stable_booster_button",
+                        new Color(0.025f, 0.17f, 0.25f, 1f), true);
+                    image.type = Image.Type.Sliced;
+                    image.preserveAspect = false;
+                    image.color = Color.white;
+                }
+
+                Text[] labels = booster.GetComponentsInChildren<Text>(true);
+                foreach (Text label in labels)
+                {
+                    bool price = (label.text ?? string.Empty).Contains("◆");
+                    label.gameObject.SetActive(price);
+                    if (price)
+                    {
+                        label.fontSize = 15;
+                        label.color = new Color(1f, 0.84f, 0.45f, 1f);
+                    }
+                }
+            }
         }
 
-        private static string StripRichTextV3(string value)
+        private void RepairModalV4()
         {
-            if (string.IsNullOrEmpty(value)) return string.Empty;
-            System.Text.StringBuilder builder = new System.Text.StringBuilder(value.Length);
-            bool insideTag = false;
-            foreach (char character in value)
+            if (canvas == null) return;
+            Transform overlay = canvas.transform.Find("ModalOverlay");
+            if (overlay == null) return;
+            overlay.SetAsLastSibling();
+
+            RectTransform panel = overlay.Find("ModalPanel") as RectTransform;
+            if (panel == null) return;
+            panel.anchorMin = new Vector2(0.08f, 0.22f);
+            panel.anchorMax = new Vector2(0.92f, 0.78f);
+            panel.offsetMin = Vector2.zero;
+            panel.offsetMax = Vector2.zero;
+            panel.localScale = Vector3.one;
+
+            Image image = panel.GetComponent<Image>();
+            if (image != null)
             {
-                if (character == '<') { insideTag = true; continue; }
-                if (character == '>') { insideTag = false; continue; }
-                if (!insideTag) builder.Append(character);
+                image.sprite = ProceduralArt.OrnateFrame("stable_modal_panel",
+                    new Color(0.018f, 0.095f, 0.15f, 0.99f), true);
+                image.type = Image.Type.Sliced;
+                image.preserveAspect = false;
+                image.color = Color.white;
             }
-            return builder.ToString().Trim();
         }
     }
 }
