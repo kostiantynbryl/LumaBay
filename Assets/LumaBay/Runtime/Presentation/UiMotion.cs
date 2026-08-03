@@ -27,12 +27,27 @@ namespace LumaBay
         private void Awake()
         {
             rect = transform as RectTransform;
+
+            // ToastRoutine owns the toast CanvasGroup and fade lifecycle.
+            // Do not create another CanvasGroup through the generic entrance animation.
+            if (name == "Toast")
+            {
+                enabled = false;
+                return;
+            }
+
             group = GetComponent<CanvasGroup>();
             if (group == null) group = gameObject.AddComponent<CanvasGroup>();
         }
 
         private void OnEnable()
         {
+            if (name == "Toast")
+            {
+                enabled = false;
+                return;
+            }
+
             if (rect == null) rect = transform as RectTransform;
             if (group == null) group = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
 
