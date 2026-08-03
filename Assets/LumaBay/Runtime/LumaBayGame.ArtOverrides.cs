@@ -15,16 +15,22 @@ namespace LumaBay
             if (screenRoot == null)
             {
                 artOverrideSignature = int.MinValue;
+                premiumSkinSignature = int.MinValue;
                 return;
             }
 
             int childCount = screenRoot.childCount;
             int firstId = childCount > 0 ? screenRoot.GetChild(0).GetInstanceID() : 0;
             int signature = childCount * 486187739 ^ firstId ^ (save != null ? save.LighthouseVisualState * 397 : 0);
-            if (signature == artOverrideSignature) return;
+            if (signature == artOverrideSignature)
+            {
+                ApplyPremiumSkinV2IfNeeded();
+                return;
+            }
             artOverrideSignature = signature;
 
             ApplyScreenPolish(screenRoot);
+            ApplyPremiumSkinV2IfNeeded();
             if (!LumaBayArtPack.IsAvailable) return;
 
             ApplyBoosterArtwork(screenRoot);
@@ -77,15 +83,15 @@ namespace LumaBay
                 string id = ResolveBoosterId(transform.name, labels);
                 if (string.IsNullOrEmpty(id)) continue;
 
-                Sprite sprite = LumaBayArtPack.Booster(id);
+                Sprite sprite = LumaBayArtPackV2.Booster(id) ?? LumaBayArtPack.Booster(id);
                 if (sprite == null) continue;
 
                 if (labels.Length > 0 && !string.IsNullOrWhiteSpace(labels[0].text) && labels[0].fontSize >= 25)
                     labels[0].text = string.Empty;
 
                 Image icon = CreateImage(transform, "PremiumBoosterIcon", sprite, Color.white);
-                icon.rectTransform.anchorMin = new Vector2(0.20f, 0.47f);
-                icon.rectTransform.anchorMax = new Vector2(0.80f, 0.96f);
+                icon.rectTransform.anchorMin = new Vector2(0.14f, 0.33f);
+                icon.rectTransform.anchorMax = new Vector2(0.86f, 0.96f);
                 icon.rectTransform.offsetMin = Vector2.zero;
                 icon.rectTransform.offsetMax = Vector2.zero;
                 icon.raycastTarget = false;
