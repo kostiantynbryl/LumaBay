@@ -132,8 +132,6 @@ namespace LumaBay
             Stretch(ambientLayer);
             ambientLayer.gameObject.AddComponent<UiAmbientParticles>();
 
-            // Parent the RectTransform before adding SafeAreaFitter. Awake() then applies
-            // anchors against the real canvas parent, and nothing overwrites them afterwards.
             GameObject safeObject = new GameObject("SafeArea", typeof(RectTransform));
             safeObject.transform.SetParent(canvasObject.transform, false);
             safeRoot = safeObject.GetComponent<RectTransform>();
@@ -155,7 +153,28 @@ namespace LumaBay
 
         private static Font ResolveRuntimeFont()
         {
-            string[] preferredFonts = { "Segoe UI", "Roboto", "Arial", "Noto Sans", "DejaVu Sans", "sans-serif" };
+            Font packagedFont = Resources.Load<Font>("Fonts/LumaBayUI");
+            if (packagedFont != null)
+            {
+                Debug.Log("Luma Bay UI font: packaged Resources/Fonts/LumaBayUI");
+                return packagedFont;
+            }
+
+            try
+            {
+                Font builtInFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                if (builtInFont != null)
+                {
+                    Debug.Log("Luma Bay UI font: Unity LegacyRuntime.ttf");
+                    return builtInFont;
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"Unable to load Unity's built-in runtime font: {exception.Message}");
+            }
+
+            string[] preferredFonts = { "Roboto", "Noto Sans", "Segoe UI", "Arial", "DejaVu Sans", "sans-serif" };
             try
             {
                 string[] installedFonts = Font.GetOSInstalledFontNames();
@@ -167,29 +186,18 @@ namespace LumaBay
                         {
                             if (!string.Equals(preferred, installed, StringComparison.OrdinalIgnoreCase)) continue;
                             Font osFont = Font.CreateDynamicFontFromOSFont(installed, 32);
-                            if (osFont != null) return osFont;
+                            if (osFont != null)
+                            {
+                                Debug.Log($"Luma Bay UI fallback font: {installed}");
+                                return osFont;
+                            }
                         }
-                    }
-                    if (installedFonts.Length > 0)
-                    {
-                        Font firstAvailable = Font.CreateDynamicFontFromOSFont(installedFonts[0], 32);
-                        if (firstAvailable != null) return firstAvailable;
                     }
                 }
             }
             catch (Exception exception)
             {
                 Debug.LogWarning($"Unable to load an operating-system font: {exception.Message}");
-            }
-
-            try
-            {
-                Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                if (legacyFont != null) return legacyFont;
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"Unable to load Unity's legacy runtime font: {exception.Message}");
             }
 
             Debug.LogError("Luma Bay could not load a runtime UI font. Text will not be visible.");
