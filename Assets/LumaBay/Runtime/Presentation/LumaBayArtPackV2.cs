@@ -66,6 +66,10 @@ namespace LumaBay
         public static Sprite SecondaryButton => GetNamed("ui", 19);
         public static Sprite BoosterTray => GetNamed("ui", 20);
 
+        // V2 has one authored complete progress-bar frame rather than a separate fill.
+        // Returning null here makes the compatibility facade use its dedicated fill asset.
+        public static Sprite ProgressFill => null;
+
         public static Sprite UiBoosterMedallion(int index)
         {
             return index >= 0 && index < 7 ? GetNamed("ui", 9 + index) : null;
