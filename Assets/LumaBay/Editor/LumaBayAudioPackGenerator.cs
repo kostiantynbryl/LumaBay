@@ -70,13 +70,13 @@ namespace LumaBay.Editor
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             if (AssetImporter.GetAtPath(path) is AudioImporter importer)
             {
-                var settings = importer.defaultSampleSettings;
+                AudioImporterSampleSettings settings = importer.defaultSampleSettings;
                 settings.loadType = loop ? AudioClipLoadType.Streaming : AudioClipLoadType.DecompressOnLoad;
                 settings.compressionFormat = AudioCompressionFormat.Vorbis;
                 settings.quality = loop ? 0.52f : 0.78f;
+                settings.preloadAudioData = !loop;
                 importer.defaultSampleSettings = settings;
                 importer.forceToMono = true;
-                importer.preloadAudioData = !loop;
                 importer.loadInBackground = loop;
                 importer.SaveAndReimport();
             }
@@ -196,10 +196,10 @@ namespace LumaBay.Editor
 
             float[][] chords =
             {
-                new[] { 261.63f, 329.63f, 392.00f, 493.88f }, // Cmaj7
-                new[] { 220.00f, 261.63f, 329.63f, 392.00f }, // Am7
-                new[] { 174.61f, 220.00f, 261.63f, 329.63f }, // Fmaj7
-                new[] { 196.00f, 261.63f, 293.66f, 392.00f }, // Gsus
+                new[] { 261.63f, 329.63f, 392.00f, 493.88f },
+                new[] { 220.00f, 261.63f, 329.63f, 392.00f },
+                new[] { 174.61f, 220.00f, 261.63f, 329.63f },
+                new[] { 196.00f, 261.63f, 293.66f, 392.00f },
             };
             float[] chord = chords[(bar / 2) % chords.Length];
             float pad = 0f;
