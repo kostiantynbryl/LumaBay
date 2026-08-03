@@ -132,10 +132,12 @@ namespace LumaBay
             Stretch(ambientLayer);
             ambientLayer.gameObject.AddComponent<UiAmbientParticles>();
 
-            GameObject safeObject = new GameObject("SafeArea", typeof(RectTransform), typeof(SafeAreaFitter));
+            // Parent the RectTransform before adding SafeAreaFitter. Awake() then applies
+            // anchors against the real canvas parent, and nothing overwrites them afterwards.
+            GameObject safeObject = new GameObject("SafeArea", typeof(RectTransform));
             safeObject.transform.SetParent(canvasObject.transform, false);
             safeRoot = safeObject.GetComponent<RectTransform>();
-            Stretch(safeRoot);
+            safeObject.AddComponent<SafeAreaFitter>();
 
             screenRoot = CreateRect(safeRoot, "ScreenRoot");
             Stretch(screenRoot);
