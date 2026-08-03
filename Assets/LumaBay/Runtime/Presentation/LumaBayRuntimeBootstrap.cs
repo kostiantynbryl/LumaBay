@@ -2,37 +2,35 @@ using UnityEngine;
 
 namespace LumaBay
 {
-    public static class LumaBayRuntimeBootstrap
+    public static class LumaBayAudioListenerGuard
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void EnsureRuntime()
+        private static void EnsureSingleAudioListener()
         {
-            RemoveDuplicateAudioListeners();
+            AudioListener[] listeners = Object.FindObjectsByType<AudioListener>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
 
-            LumaBayGame existing = Object.FindFirstObjectByType<LumaBayGame>();
-            if (existing != null) return;
-
-            GameObject runtime = new GameObject("LumaBayRuntime");
-            Object.DontDestroyOnLoad(runtime);
-            runtime.AddComponent<LumaBayGame>();
-        }
-
-        private static void RemoveDuplicateAudioListeners()
-        {
-            AudioListener[] listeners = Object.FindObjectsByType<AudioListener>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            bool keptOne = false;
+            AudioListener listenerToKeep = null;
             foreach (AudioListener listener in listeners)
             {
                 if (listener == null) continue;
-                if (!keptOne)
+
+                Camera camera = listener.GetComponent<Camera>();
+                if (camera != null && camera.CompareTag("MainCamera"))
                 {
-                    listener.enabled = true;
-                    keptOne = true;
+                    listenerToKeep = listener;
+                    break;
                 }
-                else
-                {
-                    listener.enabled = false;
-                }
+
+                if (listenerToKeep == null)
+                    listenerToKeep = listener;
+            }
+
+            foreach (AudioListener listener in listeners)
+            {
+                if (listener == null) continue;
+                listener.enabled = listener == listenerToKeep;
             }
         }
     }
