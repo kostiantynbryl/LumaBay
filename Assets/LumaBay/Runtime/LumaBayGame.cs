@@ -48,7 +48,6 @@ namespace LumaBay
             RefreshBoardPresentationIfNeeded();
             RefreshArtOverridesIfNeeded();
             UpdateHintAnimation();
-            ApplyLayoutRepairV3IfNeeded();
         }
 
         private void OnApplicationPause(bool pause)
@@ -154,16 +153,7 @@ namespace LumaBay
 
         private static Font ResolveRuntimeFont()
         {
-            string[] preferredFonts =
-            {
-                "Segoe UI",
-                "Roboto",
-                "Arial",
-                "Noto Sans",
-                "DejaVu Sans",
-                "sans-serif"
-            };
-
+            string[] preferredFonts = { "Segoe UI", "Roboto", "Arial", "Noto Sans", "DejaVu Sans", "sans-serif" };
             try
             {
                 string[] installedFonts = Font.GetOSInstalledFontNames();
@@ -175,22 +165,13 @@ namespace LumaBay
                         {
                             if (!string.Equals(preferred, installed, StringComparison.OrdinalIgnoreCase)) continue;
                             Font osFont = Font.CreateDynamicFontFromOSFont(installed, 32);
-                            if (osFont != null)
-                            {
-                                Debug.Log($"Luma Bay UI font: {installed}");
-                                return osFont;
-                            }
+                            if (osFont != null) return osFont;
                         }
                     }
-
                     if (installedFonts.Length > 0)
                     {
                         Font firstAvailable = Font.CreateDynamicFontFromOSFont(installedFonts[0], 32);
-                        if (firstAvailable != null)
-                        {
-                            Debug.Log($"Luma Bay UI fallback font: {installedFonts[0]}");
-                            return firstAvailable;
-                        }
+                        if (firstAvailable != null) return firstAvailable;
                     }
                 }
             }
@@ -202,11 +183,7 @@ namespace LumaBay
             try
             {
                 Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                if (legacyFont != null)
-                {
-                    Debug.Log("Luma Bay UI fallback font: LegacyRuntime.ttf");
-                    return legacyFont;
-                }
+                if (legacyFont != null) return legacyFont;
             }
             catch (Exception exception)
             {
