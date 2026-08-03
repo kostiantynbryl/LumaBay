@@ -13,14 +13,21 @@ namespace LumaBay.Editor
     {
         private const string OutputPath = "Builds/Android/LumaBay-0.1.2-alpha.apk";
         private const string ReportPath = "Builds/Android/LumaBay-0.1.2-alpha-build-report.txt";
+        private const string PendingAndroidBuildKey = "LumaBay.PendingAndroidBuild.0.1.2";
         private const string LegacyArtSentinel = "Assets/LumaBay/Resources/ArtPack/lighthouse/lighthouse_31.png";
         private const string V2ArtSentinel = "Assets/LumaBay/Resources/ArtPackV2/Sheets/tiles.png";
         private const string AudioSentinel = "Assets/LumaBay/Resources/Audio/music.wav";
 
+        static LumaBayBuildScript()
+        {
+            EditorApplication.delayCall += ResumePendingAndroidBuild;
+        }
+
         [MenuItem("Luma Bay/Build Android Alpha", priority = 20)]
         public static void BuildAndroid()
         {
-            EnsureAndroidBuildTarget();
+            if (!EnsureAndroidBuildTarget()) return;
+
             LumaBayProjectBootstrap.EnsureProject();
             EnsureGeneratedAssets();
 
@@ -77,7 +84,7 @@ namespace LumaBay.Editor
                     : $"Important build messages:\n{details}"));
         }
 
-        private static void EnsureAndroidBuildTarget()
+        private static bool EnsureAndroidBuildTarget()
         {
             const BuildTarget target = BuildTarget.Android;
             const BuildTargetGroup group = BuildTargetGroup.Android;
@@ -90,7 +97,11 @@ namespace LumaBay.Editor
                     "Android Build Support, Android SDK & NDK Tools, and OpenJDK.");
             }
 
-            if (EditorUserBuildSettings.activeBuildTarget == target) return;
+            if (EditorUserBuildSettings.activeBuildTarget == target)
+            {
+                SessionState.SetBool(PendingAndroidBuildKey, false);
+                return true;
+            }
 
             if (Application.isBatchMode)
             {
@@ -99,12 +110,47 @@ namespace LumaBay.Editor
                     "Restart the command with '-buildTarget Android'. The repository Build-Android-Alpha.bat already includes this argument.");
             }
 
-            Debug.Log("Switching the active Unity build target to Android before building...");
+            SessionState.SetBool(PendingAndroidBuildKey, true);
+            EditorApplication.delayCall += ResumePendingAndroidBuild;
+
+            Debug.Log("Switching the active Unity build target to Android. The APK build will resume automatically after scripts finish recompiling...");
             if (!EditorUserBuildSettings.SwitchActiveBuildTarget(group, target))
             {
+                SessionState.SetBool(PendingAndroidBuildKey, false);
                 throw new BuildFailedException(
                     "Unity could not switch the active build target to Android. " +
                     "Open File → Build Profiles, select Android, and press Switch Platform, then retry.");
+            }
+
+            return false;
+        }
+
+        private static void ResumePendingAndroidBuild()
+        {
+            if (!SessionState.GetBool(PendingAndroidBuildKey, false)) return;
+            if (Application.isBatchMode)
+            {
+                SessionState.SetBool(PendingAndroidBuildKey, false);
+                return;
+            }
+
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating ||
+                EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+            {
+                EditorApplication.delayCall += ResumePendingAndroidBuild;
+                return;
+            }
+
+            SessionState.SetBool(PendingAndroidBuildKey, false);
+            Debug.Log("Android platform switch completed. Resuming the Luma Bay APK build...");
+
+            try
+            {
+                BuildAndroid();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
             }
         }
 
