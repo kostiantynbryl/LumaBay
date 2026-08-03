@@ -20,6 +20,7 @@ namespace LumaBay
             AssignScreenButtonRoles();
             AssignModalButtonRoles(modal);
             StyleButtonsByRole();
+            WireGameplayBackButtonV7();
         }
 
         private void AssignScreenButtonRoles()
@@ -40,7 +41,8 @@ namespace LumaBay
                 Button[] buttons = root != null ? root.GetComponentsInChildren<Button>(true) : System.Array.Empty<Button>();
                 for (int i = 0; i < buttons.Length; i++)
                 {
-                    if (buttons[i].transform.IsChildOf(FindInRoot("MapHeader"))) continue;
+                    Transform header = FindInRoot("MapHeader");
+                    if (header != null && buttons[i].transform.IsChildOf(header)) continue;
                     SetRole(buttons[i], i == buttons.Length - 1 ? ButtonRoleId.Levels :
                         i == buttons.Length - 2 ? ButtonRoleId.StartLevel : ButtonRoleId.Restore);
                 }
@@ -73,11 +75,15 @@ namespace LumaBay
                 return;
             }
 
-            Transform tray = FindInRoot("BoosterTray") ?? FindInRoot("BoosterRow") ?? FindInRoot("BoostersRow");
-            if (tray != null)
+            if (FindInRoot("BoardFrame") != null || FindInRoot("Board") != null)
             {
-                foreach (Button button in tray.GetComponentsInChildren<Button>(true))
-                    SetRole(button, ButtonRoleId.Booster);
+                AssignHeaderBack("GameHeader");
+                Transform tray = FindInRoot("BoosterTray") ?? FindInRoot("BoosterRow") ?? FindInRoot("BoostersRow");
+                if (tray != null)
+                {
+                    foreach (Button button in tray.GetComponentsInChildren<Button>(true))
+                        SetRole(button, ButtonRoleId.Booster);
+                }
             }
         }
 
@@ -106,27 +112,56 @@ namespace LumaBay
                     case ButtonRoleId.StartLevel:
                     case ButtonRoleId.Restore:
                     case ButtonRoleId.ModalPrimary:
-                        StyleButtonV6(button, true, marker.Id == ButtonRoleId.Play ? 96f : 84f);
+                        StyleButtonV6(button, true, marker.Id == ButtonRoleId.Play ? 88f : 78f);
                         break;
                     case ButtonRoleId.Levels:
                     case ButtonRoleId.Settings:
-                        StyleButtonV6(button, false, 84f);
+                        StyleButtonV6(button, false, 74f);
                         break;
                     case ButtonRoleId.Back:
-                        StyleButtonV6(button, false, 64f);
+                        StyleButtonV6(button, false, 58f);
                         break;
                     case ButtonRoleId.ResetProgress:
-                        StyleButtonV6(button, false, 70f, new Color(0.40f, 0.10f, 0.14f, 0.99f));
+                        StyleButtonV6(button, false, 64f, new Color(0.62f, 0.20f, 0.24f, 1f));
                         break;
                     case ButtonRoleId.SettingToggle:
                     case ButtonRoleId.Language:
-                        StyleButtonV6(button, false, 78f);
+                        StyleButtonV6(button, false, 70f);
                         break;
                     case ButtonRoleId.ModalSecondary:
-                        StyleButtonV6(button, false, 68f);
+                        StyleButtonV6(button, false, 64f);
                         break;
                 }
             }
+        }
+
+        private void WireGameplayBackButtonV7()
+        {
+            if (FindInRoot("BoardFrame") == null && FindInRoot("Board") == null) return;
+            Transform header = FindInRoot("GameHeader");
+            if (header == null) return;
+
+            Button back = header.GetComponentInChildren<Button>(true);
+            if (back == null) return;
+
+            back.onClick.RemoveAllListeners();
+            back.onClick.AddListener(() =>
+            {
+                audioSynth?.PlayClick();
+                ShowExitLevelModalV7();
+            });
+        }
+
+        private void ShowExitLevelModalV7()
+        {
+            string title = Localization.Language == "en" ? "Leave the level?" : "Выйти из уровня?";
+            string body = Localization.Language == "en"
+                ? "Current level progress will be lost."
+                : "Текущий прогресс уровня будет потерян.";
+
+            ShowModal(title, body,
+                Localization.T("continue"), () => { },
+                Localization.T("map"), ShowMap);
         }
 
         private void AssignHeaderBack(string headerName)
